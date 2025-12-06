@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Judo Throw Classifier</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div class="p-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-lg shadow-xl p-8">
+                <h1 class="text-4xl font-bold text-gray-800 mb-2 text-center">
+                    Judo Throw Classifier
+                </h1>
+                <p class="text-gray-600 text-center mb-8">
+                    Upload reference images for each throw, then classify videos
+                </p>
+
+                <!-- Add Throw Types -->
+                <div class="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Step 1: Add Throw Types</h3>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Throw Name (e.g., "O-Goshi", "Seoi-Nage", "Uchi-Mata")
+                        </label>
+                        <input
+                            type="text"
+                            id="throwName"
+                            placeholder="Enter throw name"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Upload Reference Images (Select as many as you want)
+                        </label>
+                        <input
+                            type="file"
+                            id="imageUpload"
+                            accept="image/*"
+                            multiple
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        <p class="text-xs text-gray-500 mt-1" id="uploadStatus">
+                            You can select and upload many images at once
+                        </p>
+                    </div>
+
+                    <div id="throwTypesList" class="mt-6"></div>
+                </div>
+
+                <!-- Video Upload -->
+                <div id="videoUploadSection" class="mb-8 hidden">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Step 2: Upload Video to Classify</h3>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors">
+                        <input
+                            type="file"
+                            id="videoUpload"
+                            accept="video/*,.mp4,.mov,.avi,.mkv,.webm"
+                            class="hidden"
+                        />
+                        <label for="videoUpload" class="cursor-pointer flex flex-col items-center">
+                            <svg class="text-gray-400 mb-2" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            <span class="text-gray-600">Click to upload video</span>
+                            <span class="text-sm text-gray-500 mt-1">MP4, MOV, AVI, MKV, WebM supported</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Video Preview -->
+                <div id="videoPreview" class="mb-8 hidden">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Video Preview</h3>
+                    <div class="bg-gray-100 rounded-lg p-4">
+                        <video id="videoPlayer" controls class="w-full rounded-lg shadow-md bg-black"></video>
+                        <p id="videoInfo" class="text-sm text-gray-600 mt-2"></p>
+                    </div>
+                    <canvas id="canvas" class="hidden"></canvas>
+                    
+                    <button
+                        id="classifyBtn"
+                        class="w-full mt-4 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                    >
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <span id="classifyBtnText">Classify Throw</span>
+                    </button>
+                    
+                    <div id="videoWarning" class="mt-4 hidden p-3 bg-yellow-50 border border-yellow-200 rounded">
+                        <p class="text-sm text-yellow-800">
+                            ⚠️ Video preview not available. Your MP4 codec isn't supported by the browser. 
+                            To fix this, convert your video to H.264 format using:
+                        </p>
+                        <ul class="text-xs text-yellow-700 mt-2 ml-4 list-disc">
+                            <li>HandBrake (free desktop app)</li>
+                            <li>CloudConvert.com (online converter)</li>
+                            <li>VLC Media Player (File → Convert/Save)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div id="errorMessage" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg hidden">
+                    <span class="text-red-800"></span>
+                </div>
+
+                <!-- Results -->
+                <div id="results" class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-6 hidden">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Results</h3>
+                    
+                    <div class="bg-white rounded-lg p-6 mb-4 shadow-md">
+                        <div class="text-center">
+                            <p class="text-gray-600 mb-2">Identified Throw:</p>
+                            <p id="resultThrow" class="text-3xl font-bold text-indigo-600"></p>
+                            <p id="resultConfidence" class="text-gray-500 mt-2"></p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-4 shadow-md">
+                        <p class="text-sm font-medium text-gray-700 mb-3">All Predictions:</p>
+                        <div id="allPredictions"></div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+                    <h4 class="font-semibold text-gray-800 mb-2">How to Use:</h4>
+                    <ol class="list-decimal list-inside text-sm text-gray-700 space-y-2">
+                        <li>Enter a throw name (like "O-Goshi" or "Seoi-Nage")</li>
+                        <li>Click "Choose Files" and select as many reference images as you want</li>
+                        <li>Repeat for all throw types you want to identify</li>
+                        <li>You can add more images to an existing throw type by typing the same name</li>
+                        <li>Upload a video showing a judo throw</li>
+                        <li>Click "Classify Throw" to see the results</li>
+                    </ol>
+                    <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                        <p class="text-xs text-yellow-800">
+                            <strong>Tip:</strong> More images = better accuracy! The files you add will stay saved until you remove them.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const throwTypes = [];
+        let videoFile = null;
+
+        const throwNameInput = document.getElementById('throwName');
+        const imageUploadInput = document.getElementById('imageUpload');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const throwTypesList = document.getElementById('throwTypesList');
+        const videoUploadSection = document.getElementById('videoUploadSection');
+        const videoUploadInput = document.getElementById('videoUpload');
+        const videoPreview = document.getElementById('videoPreview');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoInfo = document.getElementById('videoInfo');
+        const videoWarning = document.getElementById('videoWarning');
+        const canvas = document.getElementById('canvas');
+        const classifyBtn = document.getElementById('classifyBtn');
+        const classifyBtnText = document.getElementById('classifyBtnText');
+        const errorMessage = document.getElementById('errorMessage');
+        const results = document.getElementById('results');
+
+        // Handle image upload
+        imageUploadInput.addEventListener('change', async (e) => {
+            const throwName = throwNameInput.value.trim();
+            if (!throwName) {
+                showError('Please enter a throw name first');
+                e.target.value = '';
+                return;
+            }
+
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            uploadStatus.textContent = 'Processing images, please wait...';
+            imageUploadInput.disabled = true;
+
+            try {
+                const imageDataArray = [];
+                
+                for (const file of files) {
+                    const imageData = await processImage(file);
+                    imageDataArray.push(imageData);
+                }
+                
+                addThrowType(throwName, imageDataArray);
+                throwNameInput.value = '';
+                uploadStatus.textContent = `✓ ${files.length} images added successfully!`;
+                setTimeout(() => {
+                    uploadStatus.textContent = 'You can select and upload many images at once';
+                }, 3000);
+            } catch (err) {
+                showError(`Error processing images: ${err.message}`);
+            } finally {
+                imageUploadInput.disabled = false;
+                e.target.value = '';
+            }
+        });
+
+        function processImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const tempCanvas = document.createElement('canvas');
+                        const ctx = tempCanvas.getContext('2d');
+                        tempCanvas.width = 224;
+                        tempCanvas.height = 224;
+                        ctx.drawImage(img, 0, 0, 224, 224);
+                        const imgData = ctx.getImageData(0, 0, 224, 224);
+                        resolve(imgData);
+                    };
+                    img.onerror = () => reject(new Error('Failed to load image'));
+                    img.src = event.target.result;
+                };
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function addThrowType(name, images) {
+            const existingIndex = throwTypes.findIndex(t => t.name === name);
+            
+            if (existingIndex !== -1) {
+                throwTypes[existingIndex].images.push(...images);
+            } else {
+                throwTypes.push({ name, images });
+            }
+            
+            updateThrowTypesList();
+            videoUploadSection.classList.remove('hidden');
+        }
+
+        function updateThrowTypesList() {
+            if (throwTypes.length === 0) {
+                throwTypesList.innerHTML = '';
+                return;
+            }
+
+            throwTypesList.innerHTML = `
+                <h4 class="text-sm font-semibold text-gray-700 mb-3">Added Throw Types:</h4>
+                <div class="space-y-2">
+                    ${throwTypes.map((throwType, index) => `
+                        <div class="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <svg class="text-green-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <span class="font-medium text-gray-800">${throwType.name}</span>
+                                    <span class="text-sm text-gray-500 ml-2">(${throwType.images.length} reference images)</span>
+                                </div>
+                            </div>
+                            <button onclick="removeThrowType(${index})" class="text-red-600 hover:text-red-800 transition-colors">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function removeThrowType(index) {
+            throwTypes.splice(index, 1);
+            updateThrowTypesList();
+            if (throwTypes.length === 0) {
+                videoUploadSection.classList.add('hidden');
+            }
+        }
+
+        // Handle video upload
+        videoUploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            console.log('=== VIDEO UPLOAD DEBUG ===');
+            console.log('File name:', file.name);
+            console.log('File type:', file.type);
+            console.log('File size:', file.size, 'bytes', '(' + (file.size / 1024 / 1024).toFixed(2) + ' MB)');
+
+            videoFile = file;
+            const url = URL.createObjectURL(file);
+            videoPlayer.src = url;
+            videoInfo.textContent = `File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            
+            videoPreview.classList.remove('hidden');
+            results.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+        });
+
+        videoPlayer.addEventListener('loadedmetadata', () => {
+            console.log('✓ Video loaded successfully!');
+            console.log('Duration:', videoPlayer.duration, 'seconds');
+            videoWarning.classList.add('hidden');
+        });
+
+        videoPlayer.addEventListener('error', (e) => {
+            console.error('✗ Video playback error');
+            videoWarning.classList.remove('hidden');
+        });
+
+        // Classify video
+        classifyBtn.addEventListener('click', async () => {
+            if (throwTypes.length === 0) {
+                showError('Please add at least one throw type with reference images first.');
+                return;
+            }
+
+            if (!videoPlayer.duration || isNaN(videoPlayer.duration) || videoPlayer.duration === 0) {
+                showError('Video format not fully supported by browser. Please convert your video to a web-compatible MP4 format (H.264 codec).');
+                return;
+            }
+
+            classifyBtn.disabled = true;
+            classifyBtnText.textContent = 'Analyzing...';
+            errorMessage.classList.add('hidden');
+            results.classList.add('hidden');
+
+            try {
+                const ctx = canvas.getContext('2d');
+                canvas.width = 224;
+                canvas.height = 224;
+
+                const frameSimilarities = {};
+                throwTypes.forEach(throwType => {
+                    frameSimilarities[throwType.name] = [];
+                });
+
+                const sampleCount = 10;
+                const duration = videoPlayer.duration;
+                
+                for (let i = 0; i < sampleCount; i++) {
+                    const time = (duration / sampleCount) * i;
+                    videoPlayer.currentTime = time;
+                    
+                    await new Promise((resolve, reject) => {
+                        const timeout = setTimeout(() => reject(new Error('Seek timeout')), 5000);
+                        videoPlayer.onseeked = () => {
+                            clearTimeout(timeout);
+                            resolve();
+                        };
+                        videoPlayer.onerror = () => {
+                            clearTimeout(timeout);
+                            reject(new Error('Video seek error'));
+                        };
+                    });
+
+                    ctx.drawImage(videoPlayer, 0, 0, 224, 224);
+                    const frameData = ctx.getImageData(0, 0, 224, 224);
+
+                    throwTypes.forEach(throwType => {
+                        let bestSimilarity = 0;
+                        throwType.images.forEach(refImage => {
+                            const similarity = compareImages(frameData, refImage);
+                            bestSimilarity = Math.max(bestSimilarity, similarity);
+                        });
+                        frameSimilarities[throwType.name].push(bestSimilarity);
+                    });
+                }
+
+                const avgSimilarities = {};
+                Object.keys(frameSimilarities).forEach(name => {
+                    const avg = frameSimilarities[name].reduce((a, b) => a + b, 0) / frameSimilarities[name].length;
+                    avgSimilarities[name] = avg;
+                });
+
+                const sortedResults = Object.entries(avgSimilarities)
+                    .map(([name, similarity]) => ({ name, similarity }))
+                    .sort((a, b) => b.similarity - a.similarity);
+
+                const topResult = sortedResults[0];
+                const threshold = 0.6;
+
+                displayResults(topResult, sortedResults, threshold);
+
+            } catch (err) {
+                showError(`Error analyzing video: ${err.message}`);
+            } finally {
+                classifyBtn.disabled = false;
+                classifyBtnText.textContent = 'Classify Throw';
+            }
+        });
+
+        function compareImages(img1, img2) {
+            let diff = 0;
+            const data1 = img1.data;
+            const data2 = img2.data;
+            
+            for (let i = 0; i < data1.length; i += 4) {
+                const rDiff = data1[i] - data2[i];
+                const gDiff = data1[i + 1] - data2[i + 1];
+                const bDiff = data1[i + 2] - data2[i + 2];
+                diff += Math.sqrt(rDiff * rDiff + gDiff * gDiff + bDiff * bDiff);
+            }
+            
+            const maxDiff = Math.sqrt(255 * 255 * 3) * data1.length / 4;
+            return 1 - (diff / maxDiff);
+        }
+
+        function displayResults(topResult, allResults, threshold) {
+            const resultThrow = document.getElementById('resultThrow');
+            const resultConfidence = document.getElementById('resultConfidence');
+            const allPredictions = document.getElementById('allPredictions');
+
+            const isUnidentifiable = topResult.similarity < threshold;
+            const displayName = isUnidentifiable ? 'Unidentifiable' : topResult.name;
+            
+            resultThrow.textContent = displayName;
+            resultThrow.className = `text-3xl font-bold ${isUnidentifiable ? 'text-orange-600' : 'text-indigo-600'}`;
+            resultConfidence.textContent = `Confidence: ${(topResult.similarity * 100).toFixed(1)}%`;
+
+            allPredictions.innerHTML = allResults.map(pred => `
+                <div class="mb-3">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-sm text-gray-700">${pred.name}</span>
+                        <span class="text-sm text-gray-600">${(pred.similarity * 100).toFixed(1)}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-indigo-600 h-2 rounded-full transition-all" style="width: ${pred.similarity * 100}%"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            results.classList.remove('hidden');
+        }
+
+        function showError(message) {
+            errorMessage.querySelector('span').textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
