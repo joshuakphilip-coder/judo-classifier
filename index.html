@@ -19,47 +19,78 @@
                     Judo Throw Classifier
                 </h1>
                 <p class="text-gray-600 text-center mb-8">
-                    Upload reference images for each throw, then classify videos
+                    Upload a video to identify the judo throw
                 </p>
 
-                <!-- Add Throw Types -->
-                <div class="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Step 1: Add Throw Types</h3>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Throw Name (e.g., "O-Goshi", "Seoi-Nage", "Uchi-Mata")
+                <!-- Admin Mode Toggle -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Training Mode</p>
+                            <p class="text-xs text-gray-500">For administrators only</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="adminToggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                         </label>
-                        <input
-                            type="text"
-                            id="throwName"
-                            placeholder="Enter throw name"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
                     </div>
-
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Upload Reference Images (Select as many as you want)
-                        </label>
-                        <input
-                            type="file"
-                            id="imageUpload"
-                            accept="image/*"
-                            multiple
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                        <p class="text-xs text-gray-500 mt-1" id="uploadStatus">
-                            You can select and upload many images at once
-                        </p>
-                    </div>
-
-                    <div id="throwTypesList" class="mt-6"></div>
                 </div>
 
-                <!-- Video Upload -->
-                <div id="videoUploadSection" class="mb-8 hidden">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Step 2: Upload Video to Classify</h3>
+                <!-- Training Section (Hidden by default) -->
+                <div id="trainingSection" class="mb-8 hidden">
+                    <div class="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">🔧 Train the Model</h3>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Throw Name (e.g., "O-Goshi", "Seoi-Nage", "Uchi-Mata")
+                            </label>
+                            <input
+                                type="text"
+                                id="throwName"
+                                placeholder="Enter throw name"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Upload Reference Images (Select as many as you want)
+                            </label>
+                            <input
+                                type="file"
+                                id="imageUpload"
+                                accept="image/*"
+                                multiple
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                            <p class="text-xs text-gray-500 mt-1" id="uploadStatus">
+                                Upload multiple images at once
+                            </p>
+                        </div>
+
+                        <div id="throwTypesList" class="mt-6"></div>
+
+                        <div class="mt-6 pt-4 border-t border-blue-200">
+                            <button
+                                id="saveModelBtn"
+                                class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                            >
+                                💾 Save Training Data
+                            </button>
+                            <p class="text-xs text-gray-600 mt-2 text-center">
+                                This will save your training so all users can classify videos
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Status -->
+                <div id="modelStatus" class="mb-6 p-4 rounded-lg hidden"></div>
+
+                <!-- Video Upload Section -->
+                <div id="videoUploadSection" class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Upload Video to Classify</h3>
                     <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors">
                         <input
                             type="file"
@@ -98,14 +129,8 @@
                     
                     <div id="videoWarning" class="mt-4 hidden p-3 bg-yellow-50 border border-yellow-200 rounded">
                         <p class="text-sm text-yellow-800">
-                            ⚠️ Video preview not available. Your MP4 codec isn't supported by the browser. 
-                            To fix this, convert your video to H.264 format using:
+                            ⚠️ Video preview not available. Convert to H.264 format for better compatibility.
                         </p>
-                        <ul class="text-xs text-yellow-700 mt-2 ml-4 list-disc">
-                            <li>HandBrake (free desktop app)</li>
-                            <li>CloudConvert.com (online converter)</li>
-                            <li>VLC Media Player (File → Convert/Save)</li>
-                        </ul>
                     </div>
                 </div>
 
@@ -136,31 +161,26 @@
                 <div class="mt-8 p-4 bg-blue-50 rounded-lg">
                     <h4 class="font-semibold text-gray-800 mb-2">How to Use:</h4>
                     <ol class="list-decimal list-inside text-sm text-gray-700 space-y-2">
-                        <li>Enter a throw name (like "O-Goshi" or "Seoi-Nage")</li>
-                        <li>Click "Choose Files" and select as many reference images as you want</li>
-                        <li>Repeat for all throw types you want to identify</li>
-                        <li>You can add more images to an existing throw type by typing the same name</li>
-                        <li>Upload a video showing a judo throw</li>
-                        <li>Click "Classify Throw" to see the results</li>
+                        <li><strong>For Students:</strong> Just upload a video and click "Classify Throw"</li>
+                        <li><strong>For Trainers:</strong> Toggle "Training Mode", add reference images for each throw, and click "Save Training Data"</li>
                     </ol>
-                    <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                        <p class="text-xs text-yellow-800">
-                            <strong>Tip:</strong> More images = better accuracy! The files you add will stay saved until you remove them.
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        const throwTypes = [];
+        let throwTypes = [];
         let videoFile = null;
 
+        const adminToggle = document.getElementById('adminToggle');
+        const trainingSection = document.getElementById('trainingSection');
         const throwNameInput = document.getElementById('throwName');
         const imageUploadInput = document.getElementById('imageUpload');
         const uploadStatus = document.getElementById('uploadStatus');
         const throwTypesList = document.getElementById('throwTypesList');
+        const saveModelBtn = document.getElementById('saveModelBtn');
+        const modelStatus = document.getElementById('modelStatus');
         const videoUploadSection = document.getElementById('videoUploadSection');
         const videoUploadInput = document.getElementById('videoUpload');
         const videoPreview = document.getElementById('videoPreview');
@@ -172,6 +192,18 @@
         const classifyBtnText = document.getElementById('classifyBtnText');
         const errorMessage = document.getElementById('errorMessage');
         const results = document.getElementById('results');
+
+        // Load saved model on startup
+        loadModel();
+
+        // Toggle admin mode
+        adminToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                trainingSection.classList.remove('hidden');
+            } else {
+                trainingSection.classList.add('hidden');
+            }
+        });
 
         // Handle image upload
         imageUploadInput.addEventListener('change', async (e) => {
@@ -198,9 +230,9 @@
                 
                 addThrowType(throwName, imageDataArray);
                 throwNameInput.value = '';
-                uploadStatus.textContent = `✓ ${files.length} images added successfully!`;
+                uploadStatus.textContent = `✓ ${files.length} images added!`;
                 setTimeout(() => {
-                    uploadStatus.textContent = 'You can select and upload many images at once';
+                    uploadStatus.textContent = 'Upload multiple images at once';
                 }, 3000);
             } catch (err) {
                 showError(`Error processing images: ${err.message}`);
@@ -222,7 +254,7 @@
                         tempCanvas.height = 224;
                         ctx.drawImage(img, 0, 0, 224, 224);
                         const imgData = ctx.getImageData(0, 0, 224, 224);
-                        resolve(imgData);
+                        resolve(Array.from(imgData.data));
                     };
                     img.onerror = () => reject(new Error('Failed to load image'));
                     img.src = event.target.result;
@@ -242,7 +274,6 @@
             }
             
             updateThrowTypesList();
-            videoUploadSection.classList.remove('hidden');
         }
 
         function updateThrowTypesList() {
@@ -262,7 +293,7 @@
                                 </svg>
                                 <div>
                                     <span class="font-medium text-gray-800">${throwType.name}</span>
-                                    <span class="text-sm text-gray-500 ml-2">(${throwType.images.length} reference images)</span>
+                                    <span class="text-sm text-gray-500 ml-2">(${throwType.images.length} images)</span>
                                 </div>
                             </div>
                             <button onclick="removeThrowType(${index})" class="text-red-600 hover:text-red-800 transition-colors">
@@ -279,20 +310,74 @@
         function removeThrowType(index) {
             throwTypes.splice(index, 1);
             updateThrowTypesList();
+        }
+
+        // Save model
+        saveModelBtn.addEventListener('click', () => {
             if (throwTypes.length === 0) {
-                videoUploadSection.classList.add('hidden');
+                showError('Please add at least one throw type before saving');
+                return;
             }
+
+            try {
+                localStorage.setItem('judoModel', JSON.stringify(throwTypes));
+                showModelStatus('✓ Training data saved! All users can now classify videos.', 'success');
+                
+                // Auto-close training mode after save
+                setTimeout(() => {
+                    adminToggle.checked = false;
+                    trainingSection.classList.add('hidden');
+                }, 2000);
+            } catch (err) {
+                showError('Error saving model: ' + err.message);
+            }
+        });
+
+        // Load model
+        function loadModel() {
+            try {
+                const saved = localStorage.getItem('judoModel');
+                if (saved) {
+                    throwTypes = JSON.parse(saved);
+                    
+                    // Convert arrays back to ImageData
+                    throwTypes = throwTypes.map(throwType => ({
+                        ...throwType,
+                        images: throwType.images.map(imgArray => {
+                            const imgData = new ImageData(224, 224);
+                            imgData.data.set(imgArray);
+                            return imgData;
+                        })
+                    }));
+                    
+                    const totalImages = throwTypes.reduce((sum, t) => sum + t.images.length, 0);
+                    showModelStatus(
+                        `✓ Model loaded: ${throwTypes.length} throw types with ${totalImages} reference images`, 
+                        'success'
+                    );
+                    updateThrowTypesList();
+                } else {
+                    showModelStatus('⚠️ No training data found. Enable Training Mode to train the model.', 'warning');
+                }
+            } catch (err) {
+                showError('Error loading model: ' + err.message);
+            }
+        }
+
+        function showModelStatus(message, type) {
+            modelStatus.textContent = message;
+            modelStatus.className = `mb-6 p-4 rounded-lg ${
+                type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' :
+                type === 'warning' ? 'bg-yellow-50 border border-yellow-200 text-yellow-800' :
+                'bg-gray-50 border border-gray-200 text-gray-800'
+            }`;
+            modelStatus.classList.remove('hidden');
         }
 
         // Handle video upload
         videoUploadInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
-            console.log('=== VIDEO UPLOAD DEBUG ===');
-            console.log('File name:', file.name);
-            console.log('File type:', file.type);
-            console.log('File size:', file.size, 'bytes', '(' + (file.size / 1024 / 1024).toFixed(2) + ' MB)');
 
             videoFile = file;
             const url = URL.createObjectURL(file);
@@ -305,25 +390,22 @@
         });
 
         videoPlayer.addEventListener('loadedmetadata', () => {
-            console.log('✓ Video loaded successfully!');
-            console.log('Duration:', videoPlayer.duration, 'seconds');
             videoWarning.classList.add('hidden');
         });
 
-        videoPlayer.addEventListener('error', (e) => {
-            console.error('✗ Video playback error');
+        videoPlayer.addEventListener('error', () => {
             videoWarning.classList.remove('hidden');
         });
 
         // Classify video
         classifyBtn.addEventListener('click', async () => {
             if (throwTypes.length === 0) {
-                showError('Please add at least one throw type with reference images first.');
+                showError('No training data available. Please contact your instructor.');
                 return;
             }
 
             if (!videoPlayer.duration || isNaN(videoPlayer.duration) || videoPlayer.duration === 0) {
-                showError('Video format not fully supported by browser. Please convert your video to a web-compatible MP4 format (H.264 codec).');
+                showError('Video format not fully supported. Please convert to H.264 MP4 format.');
                 return;
             }
 
@@ -354,10 +436,6 @@
                         videoPlayer.onseeked = () => {
                             clearTimeout(timeout);
                             resolve();
-                        };
-                        videoPlayer.onerror = () => {
-                            clearTimeout(timeout);
-                            reject(new Error('Video seek error'));
                         };
                     });
 
