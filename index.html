@@ -3,272 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Judo Throw Classifier - Production Ready</title>
+    <title>Judo Throw Classifier</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1640029074/drawing_utils.js" crossorigin="anonymous"></script>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-    <div class="p-8">
-        <div class="max-w-6xl mx-auto">
-            <div class="bg-white rounded-lg shadow-xl p-8">
-                <h1 class="text-4xl font-bold text-gray-800 mb-2 text-center">
-                    🥋 Judo Throw Classifier
-                </h1>
-                <p class="text-gray-600 text-center mb-8">
-                    AI-Powered Technique Analysis • 3 Throws Trained
-                </p>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-xl p-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center">🥋 Judo Throw Classifier</h1>
+            <p class="text-gray-600 text-center mb-6">AI-Powered Body Pose Analysis</p>
 
-                <!-- Status Badge -->
-                <div class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200">
-                    <div class="flex items-center justify-between">
-                        <span class="text-green-800 font-medium">✅ Model Ready: 3 throws, 42 training images</span>
-                        <span class="text-xs text-green-600">O-Goshi • Osoto-Gari • Morote-Gari</span>
-                    </div>
+            <div class="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-center">
+                <span class="text-green-800 font-medium">✅ Ready: O-Goshi • Osoto-Gari • Morote-Gari</span>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Upload Video</label>
+                <input type="file" id="videoUpload" accept="video/*" 
+                       class="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-400 cursor-pointer">
+            </div>
+
+            <div id="videoSection" class="hidden mb-6">
+                <video id="videoPlayer" class="w-full max-h-96 rounded-lg bg-black mb-3"></video>
+                <button id="analyzeBtn" 
+                        class="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold">
+                    🔍 Analyze Throw
+                </button>
+            </div>
+
+            <div id="progress" class="hidden mb-6">
+                <div class="bg-gray-200 rounded-full h-3 mb-2">
+                    <div id="progressBar" class="bg-indigo-600 h-3 rounded-full transition-all" style="width:0%"></div>
                 </div>
+                <p id="progressText" class="text-sm text-gray-600 text-center"></p>
+            </div>
 
-                <!-- Upload Section -->
-                <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Upload Video or Image</h3>
-                    <input
-                        type="file"
-                        id="mediaUpload"
-                        accept="video/*,image/*"
-                        class="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-400 transition cursor-pointer"
-                    />
-                    <p class="text-xs text-gray-500 mt-2">Supports: MP4, MOV, JPG, PNG</p>
-                </div>
+            <div id="error" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <span class="text-red-800"></span>
+            </div>
 
-                <!-- Preview Section -->
-                <div id="previewSection" class="mb-8 hidden">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Preview & Analysis</h3>
+            <div id="results" class="hidden">
+                <div class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Results</h3>
                     
-                    <div class="mb-4 max-w-2xl mx-auto">
-                        <video id="videoPlayer" controls class="w-full max-h-80 rounded-lg shadow-md bg-black hidden object-contain"></video>
-                        <img id="imagePreview" class="w-full max-h-80 rounded-lg shadow-md hidden object-contain">
-                    </div>
-                    
-                    <button
-                        id="analyzeBtn"
-                        class="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold"
-                    >
-                        <span id="analyzeBtnText">🔍 Analyze Technique</span>
-                    </button>
-                </div>
-
-                <!-- Progress -->
-                <div id="progress" class="mb-8 hidden">
-                    <div class="bg-gray-200 rounded-full h-3 overflow-hidden">
-                        <div id="progressBar" class="bg-indigo-600 h-3 transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                    <p id="progressText" class="text-sm text-gray-600 mt-2 text-center"></p>
-                </div>
-
-                <!-- Results Section -->
-                <div id="results" class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-6 hidden">
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Analysis Results</h3>
-                    
-                    <!-- Primary Result -->
-                    <div class="bg-white rounded-lg p-6 mb-4 shadow-md text-center">
+                    <div class="bg-white rounded-lg p-6 mb-4 shadow text-center">
                         <p class="text-gray-600 mb-2">Identified Technique:</p>
-                        <p id="resultThrow" class="text-4xl font-bold text-indigo-600 mb-2"></p>
-                        <p id="resultDescription" class="text-gray-500 mb-3"></p>
-                        <div class="flex items-center justify-center gap-2">
+                        <p id="resultName" class="text-4xl font-bold text-indigo-600 mb-2"></p>
+                        <p id="resultDesc" class="text-gray-500 mb-3"></p>
+                        <div class="flex items-center justify-center gap-3">
                             <div class="w-64 bg-gray-200 rounded-full h-4">
-                                <div id="confidenceBar" class="bg-indigo-600 h-4 rounded-full transition-all" style="width: 0%"></div>
+                                <div id="confidenceBar" class="bg-indigo-600 h-4 rounded-full" style="width:0%"></div>
                             </div>
-                            <span id="resultConfidence" class="font-semibold text-gray-700"></span>
+                            <span id="confidence" class="font-semibold"></span>
                         </div>
                     </div>
 
-                    <!-- All Predictions -->
-                    <div class="bg-white rounded-lg p-4 shadow-md mb-4">
+                    <div class="bg-white rounded-lg p-4 shadow mb-4">
                         <p class="text-sm font-medium text-gray-700 mb-3">All Predictions:</p>
                         <div id="allPredictions"></div>
                     </div>
 
-                    <!-- Teaching Points -->
-                    <div id="teachingPoints" class="bg-white rounded-lg p-4 shadow-md">
-                        <p class="text-sm font-bold text-gray-800 mb-3">📚 Key Teaching Points:</p>
-                        <ul id="teachingList" class="space-y-2"></ul>
+                    <div class="bg-white rounded-lg p-4 shadow">
+                        <p class="text-sm font-bold text-gray-800 mb-3">📚 Key Points:</p>
+                        <ul id="keyPoints" class="space-y-1 text-sm text-gray-700"></ul>
                     </div>
                 </div>
-
-                <!-- Error Message -->
-                <div id="errorMessage" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg hidden">
-                    <span class="text-red-800"></span>
-                </div>
             </div>
+
+            <canvas id="canvas" class="hidden"></canvas>
         </div>
     </div>
 
 <script>
-// ============================================================================
-// TRAINING DATA - Embedded from Python classifier
-// ============================================================================
-const TRAINING_DATA = {
-    "o_goshi": {
-        "name": "O-Goshi",
-        "english": "Major Hip Throw",
-        "category": "Koshi-Waza (Hip Techniques)",
-        "features": ["hip_contact", "tori_back_to_uke", "uke_elevated", "tori_bent_forward", "arm_around_waist", "close_body_contact"],
-        "teachingPoints": [
-            "Step in close and turn your back to uke",
-            "Insert your hip deep under uke's center of gravity",
-            "Bend forward at the waist (45-60 degrees)",
-            "Wrap your arm tightly around uke's waist",
-            "Keep your feet close together and parallel",
-            "Pull uke onto your hip while lifting",
-            "Rotate and throw forward over your hip",
-            "Maintain close body contact throughout"
+const THROWS = {
+    ogoshi: {
+        name: "O-Goshi",
+        english: "Major Hip Throw",
+        category: "Hip Technique",
+        points: [
+            "Turn back to opponent",
+            "Hip deep under opponent's center",
+            "Bend forward 45-60 degrees",
+            "Arm around waist tightly",
+            "Feet parallel and close",
+            "Lift while rotating forward"
         ]
     },
-    "osoto_gari": {
-        "name": "Osoto-Gari",
-        "english": "Major Outer Reap",
-        "category": "Ashi-Waza (Leg Techniques)",
-        "features": ["facing_each_other", "reaping_leg_visible", "tori_upright", "uke_falling_backward", "leg_contact_high", "chest_pressure"],
-        "teachingPoints": [
-            "Get strong collar and sleeve grips",
-            "Step to the outside of uke's leg that you'll attack",
-            "Break uke's balance backward onto their back leg",
-            "Drive your chest forward and over uke",
-            "Sweep your leg high behind uke's leg (above the knee)",
-            "Use a powerful reaping motion - sweep back and up",
-            "Keep your supporting leg stable and balanced",
-            "Follow through by driving uke straight backward",
-            "Maintain collar control throughout the throw"
+    osoto: {
+        name: "Osoto-Gari", 
+        english: "Major Outer Reap",
+        category: "Leg Technique",
+        points: [
+            "Stay upright facing opponent",
+            "Strong collar and sleeve grips",
+            "Break balance backward",
+            "Sweep leg high behind opponent's leg",
+            "Drive chest forward",
+            "Follow through backward"
         ]
     },
-    "morote_gari": {
-        "name": "Morote-Gari",
-        "english": "Double Leg Takedown",
-        "category": "Te-Waza (Hand Techniques)",
-        "features": ["level_change", "both_legs_grabbed", "low_position", "penetration_step", "arms_around_legs", "knee_down"],
-        "teachingPoints": [
-            "Start in a good athletic stance",
-            "Change levels - drop your hips down low",
-            "Take a deep penetration step between uke's legs",
-            "Keep your back straight and head up initially",
-            "Wrap both arms around both of uke's legs",
-            "Clasp your hands together behind uke's legs",
-            "Place your head tight to one side of uke's body",
-            "Drive forward with your legs while lifting",
-            "Keep driving through until uke is on the mat",
-            "Maintain control of both legs throughout"
+    morote: {
+        name: "Morote-Gari",
+        english: "Double Leg Takedown", 
+        category: "Hand Technique",
+        points: [
+            "Drop hips low (level change)",
+            "Deep penetration step",
+            "Wrap both arms around legs",
+            "Head to side of body",
+            "Drive forward with legs",
+            "Maintain control of both legs"
         ]
     }
 };
 
-// ============================================================================
-// FEATURE DETECTION FROM POSE
-// ============================================================================
-function extractFeatures(poseLandmarks) {
-    if (!poseLandmarks || poseLandmarks.length === 0) {
-        return null;
-    }
-    
-    const features = {};
-    
-    // Helper functions
-    const getPoint = (idx) => poseLandmarks[idx];
-    const distance = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-    const angle = (p1, p2, p3) => {
-        const v1 = { x: p1.x - p2.x, y: p1.y - p2.y };
-        const v2 = { x: p3.x - p2.x, y: p3.y - p2.y };
-        const dot = v1.x * v2.x + v1.y * v2.y;
-        const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
-        const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
-        return Math.acos(dot / (mag1 * mag2)) * 180 / Math.PI;
-    };
-    
-    // Key landmarks
-    const nose = getPoint(0);
-    const leftShoulder = getPoint(11);
-    const rightShoulder = getPoint(12);
-    const leftHip = getPoint(23);
-    const rightHip = getPoint(24);
-    const leftKnee = getPoint(25);
-    const rightKnee = getPoint(26);
-    const leftAnkle = getPoint(27);
-    const rightAnkle = getPoint(28);
-    
-    // O-Goshi features
-    features.hip_contact = leftHip.y < 0.5; // Hip relatively high
-    features.tori_back_to_uke = Math.abs(leftShoulder.x - rightShoulder.x) > 0.15; // Shoulders rotated
-    features.uke_elevated = leftHip.y < rightHip.y - 0.1; // Asymmetric hips
-    features.tori_bent_forward = nose.y < leftShoulder.y; // Torso bent
-    features.arm_around_waist = true; // Placeholder - hard to detect from single person
-    features.close_body_contact = true; // Placeholder
-    
-    // Osoto-Gari features  
-    features.facing_each_other = Math.abs(leftShoulder.x - rightShoulder.x) < 0.15; // Shoulders aligned
-    features.reaping_leg_visible = (leftAnkle.y < leftKnee.y - 0.1) || (rightAnkle.y < rightKnee.y - 0.1); // One leg extended
-    features.tori_upright = nose.y > leftShoulder.y + 0.1; // Upright posture
-    features.uke_falling_backward = false; // Placeholder
-    features.leg_contact_high = Math.max(leftKnee.y, rightKnee.y) < 0.6; // Leg raised
-    features.chest_pressure = leftShoulder.y < 0.4 && rightShoulder.y < 0.4; // Chest forward
-    
-    // Morote-Gari features
-    const hipHeight = (leftHip.y + rightHip.y) / 2;
-    features.level_change = hipHeight > 0.6; // Low position
-    features.both_legs_grabbed = true; // Placeholder
-    features.low_position = hipHeight > 0.6;
-    features.penetration_step = Math.abs(leftAnkle.x - rightAnkle.x) > 0.3; // Wide stance
-    features.arms_around_legs = leftShoulder.y > leftHip.y; // Arms low
-    features.knee_down = Math.min(leftKnee.y, rightKnee.y) > 0.7; // Knee near ground
-    
-    return features;
-}
-
-// ============================================================================
-// CLASSIFICATION ENGINE
-// ============================================================================
-function classifyThrow(features) {
-    if (!features) {
-        return null;
-    }
-    
-    const scores = {};
-    
-    // Score each throw
-    for (const [throwId, throwData] of Object.entries(TRAINING_DATA)) {
-        let score = 0;
-        const maxScore = throwData.features.length;
-        
-        for (const feature of throwData.features) {
-            if (features[feature]) {
-                score++;
-            }
-        }
-        
-        scores[throwId] = {
-            name: throwData.name,
-            english: throwData.english,
-            category: throwData.category,
-            confidence: (score / maxScore) * 100,
-            teachingPoints: throwData.teachingPoints
-        };
-    }
-    
-    // Sort by confidence
-    const sorted = Object.entries(scores)
-        .map(([id, data]) => ({ id, ...data }))
-        .sort((a, b) => b.confidence - a.confidence);
-    
-    return sorted;
-}
-
-// ============================================================================
-// MEDIAPIPE POSE DETECTION
-// ============================================================================
 let pose = null;
-let isAnalyzing = false;
+let video = null;
 
 function initPose() {
     pose = new Pose({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+        locateFile: (file) => "https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/" + file
     });
     
     pose.setOptions({
@@ -279,148 +135,180 @@ function initPose() {
     });
 }
 
-// ============================================================================
-// UI HANDLERS
-// ============================================================================
-document.getElementById('mediaUpload').onchange = function(e) {
+function analyzeFrame(landmarks) {
+    const scores = {ogoshi: 0, osoto: 0, morote: 0};
+    
+    const nose = landmarks[0];
+    const lShoulder = landmarks[11];
+    const rShoulder = landmarks[12];
+    const lHip = landmarks[23];
+    const rHip = landmarks[24];
+    const lKnee = landmarks[25];
+    const rKnee = landmarks[26];
+    const lAnkle = landmarks[27];
+    const rAnkle = landmarks[28];
+    
+    const hipY = (lHip.y + rHip.y) / 2;
+    const shoulderY = (lShoulder.y + rShoulder.y) / 2;
+    const noseY = nose.y;
+    
+    // O-Goshi detection
+    if (noseY < shoulderY - 0.05) scores.ogoshi += 3;
+    if (Math.abs(lShoulder.x - rShoulder.x) > 0.12) scores.ogoshi += 2;
+    if (hipY < 0.55) scores.ogoshi += 2;
+    if (Math.abs(lHip.y - rHip.y) > 0.08) scores.ogoshi += 2;
+    
+    // Osoto detection
+    if (noseY > shoulderY + 0.03) scores.osoto += 3;
+    if (Math.abs(lShoulder.x - rShoulder.x) < 0.10) scores.osoto += 2;
+    const legExtended = Math.abs(lAnkle.y - lKnee.y) > 0.15 || Math.abs(rAnkle.y - rKnee.y) > 0.15;
+    if (legExtended) scores.osoto += 3;
+    if (shoulderY < 0.35) scores.osoto += 1;
+    
+    // Morote-Gari detection
+    if (hipY > 0.65) scores.morote += 4;
+    if (shoulderY > hipY - 0.1) scores.morote += 3;
+    const stanceWide = Math.abs(lAnkle.x - rAnkle.x) > 0.25;
+    if (stanceWide) scores.morote += 2;
+    const kneeLow = Math.min(lKnee.y, rKnee.y) > 0.70;
+    if (kneeLow) scores.morote += 2;
+    
+    return scores;
+}
+
+document.getElementById('videoUpload').onchange = function(e) {
     const file = e.target.files[0];
     if (!file) return;
     
-    const isVideo = file.type.startsWith('video/');
-    const video = document.getElementById('videoPlayer');
-    const image = document.getElementById('imagePreview');
+    video = document.getElementById('videoPlayer');
+    video.src = URL.createObjectURL(file);
+    video.load();
     
-    if (isVideo) {
-        video.src = URL.createObjectURL(file);
-        video.classList.remove('hidden');
-        image.classList.add('hidden');
-    } else {
-        image.src = URL.createObjectURL(file);
-        image.classList.remove('hidden');
-        video.classList.add('hidden');
-    }
-    
-    document.getElementById('previewSection').classList.remove('hidden');
+    document.getElementById('videoSection').classList.remove('hidden');
     document.getElementById('results').classList.add('hidden');
     
-    if (!pose) {
-        initPose();
-    }
+    if (!pose) initPose();
 };
 
 document.getElementById('analyzeBtn').onclick = async function() {
-    if (isAnalyzing) return;
-    
-    isAnalyzing = true;
     const btn = this;
-    const btnText = document.getElementById('analyzeBtnText');
     btn.disabled = true;
-    btnText.textContent = '⏳ Analyzing...';
     
     document.getElementById('progress').classList.remove('hidden');
-    updateProgress(0, 'Initializing analysis...');
+    document.getElementById('results').classList.add('hidden');
+    updateProgress(0, 'Starting analysis...');
+    
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    
+    const allScores = {ogoshi: [], osoto: [], morote: []};
+    const sampleCount = 10;
+    let processed = 0;
     
     try {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        updateProgress(30, 'Detecting body positions...');
+        for (let i = 0; i < sampleCount; i++) {
+            video.currentTime = (video.duration / sampleCount) * i;
+            
+            await new Promise(resolve => {
+                video.onseeked = resolve;
+                setTimeout(resolve, 1000);
+            });
+            
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            await new Promise((resolve) => {
+                pose.onResults((results) => {
+                    if (results.poseLandmarks) {
+                        const scores = analyzeFrame(results.poseLandmarks);
+                        allScores.ogoshi.push(scores.ogoshi);
+                        allScores.osoto.push(scores.osoto);
+                        allScores.morote.push(scores.morote);
+                    }
+                    resolve();
+                });
+                pose.send({image: canvas});
+            });
+            
+            processed++;
+            updateProgress((processed / sampleCount) * 100, 
+                `Analyzing frame ${processed}/${sampleCount}...`);
+        }
         
-        await new Promise(resolve => setTimeout(resolve, 300));
-        updateProgress(60, 'Extracting features...');
-        
-        await new Promise(resolve => setTimeout(resolve, 300));
-        updateProgress(90, 'Classifying technique...');
-        
-        // Mock features for demo (replace with actual pose detection)
-        const mockFeatures = {
-            // Try different combinations to test
-            level_change: true,
-            both_legs_grabbed: true,
-            low_position: true,
-            penetration_step: true,
-            arms_around_legs: true,
-            knee_down: true
+        const avg = {
+            ogoshi: allScores.ogoshi.reduce((a,b) => a+b, 0) / allScores.ogoshi.length,
+            osoto: allScores.osoto.reduce((a,b) => a+b, 0) / allScores.osoto.length,
+            morote: allScores.morote.reduce((a,b) => a+b, 0) / allScores.morote.length
         };
         
-        const results = classifyThrow(mockFeatures);
+        const total = avg.ogoshi + avg.osoto + avg.morote;
+        const results = [
+            {id: 'ogoshi', score: (avg.ogoshi / total) * 100},
+            {id: 'osoto', score: (avg.osoto / total) * 100},
+            {id: 'morote', score: (avg.morote / total) * 100}
+        ].sort((a, b) => b.score - a.score);
         
-        updateProgress(100, 'Complete!');
         showResults(results);
         
-    } catch (error) {
-        showError('Analysis failed: ' + error.message);
+    } catch (err) {
+        showError('Analysis failed: ' + err.message);
     } finally {
-        isAnalyzing = false;
         btn.disabled = false;
-        btnText.textContent = '🔍 Analyze Technique';
         setTimeout(() => {
             document.getElementById('progress').classList.add('hidden');
         }, 1000);
     }
 };
 
-function updateProgress(percent, text) {
-    document.getElementById('progressBar').style.width = percent + '%';
-    document.getElementById('progressText').textContent = text;
+function updateProgress(pct, txt) {
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressText').textContent = txt;
 }
 
 function showResults(results) {
     const best = results[0];
-    const threshold = 50;
+    const throwData = THROWS[best.id];
     
-    // Primary result
-    document.getElementById('resultThrow').textContent = best.confidence < threshold ? "Unable to classify" : best.name;
-    document.getElementById('resultDescription').textContent = best.confidence < threshold ? "Try a clearer video" : best.english + " • " + best.category;
-    document.getElementById('resultConfidence').textContent = best.confidence.toFixed(1) + '%';
-    document.getElementById('confidenceBar').style.width = best.confidence + '%';
+    document.getElementById('resultName').textContent = throwData.name;
+    document.getElementById('resultDesc').textContent = throwData.english + ' • ' + throwData.category;
+    document.getElementById('confidence').textContent = best.score.toFixed(1) + '%';
+    document.getElementById('confidenceBar').style.width = best.score + '%';
     
-    // Color coding
-    const color = best.confidence >= 70 ? 'text-green-600' : best.confidence >= 50 ? 'text-indigo-600' : 'text-orange-600';
-    document.getElementById('resultThrow').className = 'text-4xl font-bold mb-2 ' + color;
-    
-    // All predictions
     let html = '';
-    for (const result of results) {
-        const barColor = result.confidence >= 70 ? 'bg-green-500' : result.confidence >= 50 ? 'bg-indigo-500' : 'bg-gray-400';
+    results.forEach(r => {
+        const t = THROWS[r.id];
         html += `
-            <div class="mb-3">
+            <div class="mb-2">
                 <div class="flex justify-between mb-1">
-                    <span class="font-medium">${result.name}</span>
-                    <span class="text-sm text-gray-600">${result.confidence.toFixed(1)}%</span>
+                    <span class="font-medium">${t.name}</span>
+                    <span class="text-sm">${r.score.toFixed(1)}%</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="${barColor} h-2 rounded-full transition-all" style="width: ${result.confidence}%"></div>
+                    <div class="bg-indigo-500 h-2 rounded-full" style="width:${r.score}%"></div>
                 </div>
             </div>
         `;
-    }
+    });
     document.getElementById('allPredictions').innerHTML = html;
     
-    // Teaching points
-    if (best.confidence >= threshold) {
-        let pointsHtml = '';
-        for (let i = 0; i < best.teachingPoints.length; i++) {
-            pointsHtml += `<li class="text-sm text-gray-700">✓ ${best.teachingPoints[i]}</li>`;
-        }
-        document.getElementById('teachingList').innerHTML = pointsHtml;
-        document.getElementById('teachingPoints').classList.remove('hidden');
-    } else {
-        document.getElementById('teachingPoints').classList.add('hidden');
-    }
+    let points = '';
+    throwData.points.forEach(p => {
+        points += `<li>✓ ${p}</li>`;
+    });
+    document.getElementById('keyPoints').innerHTML = points;
     
     document.getElementById('results').classList.remove('hidden');
-    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function showError(msg) {
-    const errorDiv = document.getElementById('errorMessage');
-    errorDiv.querySelector('span').textContent = msg;
-    errorDiv.classList.remove('hidden');
-    setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+    const el = document.getElementById('error');
+    el.querySelector('span').textContent = msg;
+    el.classList.remove('hidden');
 }
 
-// Initialize
-console.log('Judo Throw Classifier loaded');
-console.log('Training data:', TRAINING_DATA);
+console.log('Judo Classifier Ready');
 </script>
 </body>
 </html>
