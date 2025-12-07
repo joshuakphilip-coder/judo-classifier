@@ -163,7 +163,7 @@
     </div>
 
 <script>
-var STORAGE_BIN_ID = null;
+var STORAGE_BIN_ID = "PASTE_YOUR_BIN_ID_HERE";
 var ADMIN_PASSWORD = "admin123";
 var throwTypes = [];
 var videoFile = null;
@@ -190,7 +190,12 @@ var errorMessage = document.getElementById("errorMessage");
 var results = document.getElementById("results");
 
 try {
-    STORAGE_BIN_ID = localStorage.getItem("judoBinId");
+    if (STORAGE_BIN_ID === "PASTE_YOUR_BIN_ID_HERE") {
+        var savedId = localStorage.getItem("judoBinId");
+        if (savedId) {
+            STORAGE_BIN_ID = savedId;
+        }
+    }
 } catch (e) {
     console.log("localStorage not available");
 }
@@ -460,6 +465,8 @@ classifyBtn.addEventListener("click", function() {
     
     function processSample() {
         if (currentSample >= sampleCount) {
+            console.log("Processing complete, calculating results...");
+            
             var avgSimilarities = {};
             for (var name in frameSimilarities) {
                 var sum = 0;
@@ -487,24 +494,42 @@ classifyBtn.addEventListener("click", function() {
             return;
         }
         
+        console.log("Processing sample " + (currentSample + 1) + " of " + sampleCount);
+        
         var time = (duration / sampleCount) * currentSample;
         videoPlayer.currentTime = time;
         
+        var seekTimeout = setTimeout(function() {
+            console.error("Seek timeout for sample " + currentSample);
+            showError("Video seeking timed out. Try a different video format.");
+            classifyBtn.disabled = false;
+            classifyBtnText.textContent = "Classify Throw";
+        }, 3000);
+        
         videoPlayer.onseeked = function() {
-            ctx.drawImage(videoPlayer, 0, 0, 224, 224);
-            var frameData = ctx.getImageData(0, 0, 224, 224);
-
-            for (var j = 0; j < throwTypes.length; j++) {
-                var bestSimilarity = 0;
-                for (var k = 0; k < throwTypes[j].images.length; k++) {
-                    var similarity = compareImages(frameData, throwTypes[j].images[k]);
-                    bestSimilarity = Math.max(bestSimilarity, similarity);
-                }
-                frameSimilarities[throwTypes[j].name].push(bestSimilarity);
-            }
+            clearTimeout(seekTimeout);
             
-            currentSample++;
-            processSample();
+            try {
+                ctx.drawImage(videoPlayer, 0, 0, 224, 224);
+                var frameData = ctx.getImageData(0, 0, 224, 224);
+
+                for (var j = 0; j < throwTypes.length; j++) {
+                    var bestSimilarity = 0;
+                    for (var k = 0; k < throwTypes[j].images.length; k++) {
+                        var similarity = compareImages(frameData, throwTypes[j].images[k]);
+                        bestSimilarity = Math.max(bestSimilarity, similarity);
+                    }
+                    frameSimilarities[throwTypes[j].name].push(bestSimilarity);
+                }
+                
+                currentSample++;
+                setTimeout(processSample, 100);
+            } catch (err) {
+                console.error("Error processing frame:", err);
+                showError("Error processing video frame: " + err.message);
+                classifyBtn.disabled = false;
+                classifyBtnText.textContent = "Classify Throw";
+            }
         };
     }
     
