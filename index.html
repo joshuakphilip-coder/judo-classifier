@@ -14,7 +14,7 @@
                     Judo Throw Classifier
                 </h1>
                 <p class="text-gray-600 text-center mb-8">
-                    Upload a video to identify the judo throw
+                    Upload reference images, then classify videos
                 </p>
 
                 <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -26,7 +26,7 @@
                             <input
                                 type="password"
                                 id="adminPassword"
-                                placeholder="Enter password to enable training"
+                                placeholder="Enter password"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg"
                             />
                             <p class="text-xs text-gray-500 mt-1">Default: admin123</p>
@@ -51,7 +51,7 @@
                             <input
                                 type="text"
                                 id="throwName"
-                                placeholder="Enter throw name"
+                                placeholder="e.g., O-Goshi"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg"
                             />
                         </div>
@@ -68,66 +68,51 @@
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg"
                             />
                             <p class="text-xs text-gray-500 mt-1" id="uploadStatus">
-                                Upload multiple images at once
+                                Upload 5-20 images per throw type
                             </p>
                         </div>
 
-                        <div id="throwTypesList" class="mt-6"></div>
+                        <div id="throwTypesList"></div>
 
                         <div class="mt-6 pt-4 border-t border-blue-200">
                             <button
-                                id="saveModelBtn"
-                                class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                id="exportBtn"
+                                class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 mb-2"
                             >
-                                <span id="saveBtnText">Save Training Data to Cloud</span>
+                                Export Training Data
                             </button>
+                            <p class="text-xs text-gray-600 text-center">
+                                Save your training to use later
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <div id="modelStatus" class="mb-6 p-4 rounded-lg">
-                    <div class="flex items-center gap-2">
-                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                        <span class="text-gray-600">Loading training data...</span>
-                    </div>
+                <div id="modelStatus" class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200">
+                    <span id="statusText" class="text-green-800">Ready to classify</span>
                 </div>
 
-                <div id="videoUploadSection" class="mb-8">
+                <div class="mb-8">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">Upload Video to Classify</h3>
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                        <input
-                            type="file"
-                            id="videoUpload"
-                            accept="video/*"
-                            class="hidden"
-                        />
-                        <label for="videoUpload" class="cursor-pointer flex flex-col items-center">
-                            <span class="text-gray-600">Click to upload video</span>
-                            <span class="text-sm text-gray-500 mt-1">MP4, MOV, AVI supported</span>
-                        </label>
-                    </div>
+                    <input
+                        type="file"
+                        id="videoUpload"
+                        accept="video/*"
+                        class="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg"
+                    />
                 </div>
 
                 <div id="videoPreview" class="mb-8 hidden">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Video Preview</h3>
-                    <div class="bg-gray-100 rounded-lg p-4">
-                        <video id="videoPlayer" controls class="w-full rounded-lg shadow-md bg-black"></video>
-                        <p id="videoInfo" class="text-sm text-gray-600 mt-2"></p>
-                    </div>
+                    <video id="videoPlayer" controls class="w-full rounded-lg shadow-md bg-black mb-4"></video>
                     <canvas id="canvas" class="hidden"></canvas>
                     
                     <button
                         id="classifyBtn"
-                        class="w-full mt-4 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                        class="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
                     >
                         <span id="classifyBtnText">Classify Throw</span>
                     </button>
-                    
-                    <div id="videoWarning" class="mt-4 hidden p-3 bg-yellow-50 border border-yellow-200 rounded">
-                        <p class="text-sm text-yellow-800">
-                            Video preview not available. Convert to H.264 format.
-                        </p>
-                    </div>
                 </div>
 
                 <div id="errorMessage" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg hidden">
@@ -137,12 +122,10 @@
                 <div id="results" class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-6 hidden">
                     <h3 class="text-xl font-semibold text-gray-800 mb-4">Results</h3>
                     
-                    <div class="bg-white rounded-lg p-6 mb-4 shadow-md">
-                        <div class="text-center">
-                            <p class="text-gray-600 mb-2">Identified Throw:</p>
-                            <p id="resultThrow" class="text-3xl font-bold text-indigo-600"></p>
-                            <p id="resultConfidence" class="text-gray-500 mt-2"></p>
-                        </div>
+                    <div class="bg-white rounded-lg p-6 mb-4 shadow-md text-center">
+                        <p class="text-gray-600 mb-2">Identified Throw:</p>
+                        <p id="resultThrow" class="text-3xl font-bold text-indigo-600"></p>
+                        <p id="resultConfidence" class="text-gray-500 mt-2"></p>
                     </div>
 
                     <div class="bg-white rounded-lg p-4 shadow-md">
@@ -150,445 +133,289 @@
                         <div id="allPredictions"></div>
                     </div>
                 </div>
-
-                <div class="mt-8 p-4 bg-blue-50 rounded-lg">
-                    <h4 class="font-semibold text-gray-800 mb-2">How to Use:</h4>
-                    <ol class="list-decimal list-inside text-sm text-gray-700 space-y-2">
-                        <li>For Students: Upload a video and click Classify Throw</li>
-                        <li>For Trainers: Enter password and train the model</li>
-                    </ol>
-                </div>
             </div>
         </div>
     </div>
 
 <script>
-var STORAGE_BIN_ID = "PASTE_YOUR_BIN_ID_HERE";
+var EMBEDDED_TRAINING_DATA = "";
 var ADMIN_PASSWORD = "admin123";
 var throwTypes = [];
-var videoFile = null;
-
-var adminPassword = document.getElementById("adminPassword");
-var unlockBtn = document.getElementById("unlockBtn");
-var trainingSection = document.getElementById("trainingSection");
-var throwNameInput = document.getElementById("throwName");
-var imageUploadInput = document.getElementById("imageUpload");
-var uploadStatus = document.getElementById("uploadStatus");
-var throwTypesList = document.getElementById("throwTypesList");
-var saveModelBtn = document.getElementById("saveModelBtn");
-var saveBtnText = document.getElementById("saveBtnText");
-var modelStatus = document.getElementById("modelStatus");
-var videoUploadInput = document.getElementById("videoUpload");
-var videoPreview = document.getElementById("videoPreview");
-var videoPlayer = document.getElementById("videoPlayer");
-var videoInfo = document.getElementById("videoInfo");
-var videoWarning = document.getElementById("videoWarning");
-var canvas = document.getElementById("canvas");
-var classifyBtn = document.getElementById("classifyBtn");
-var classifyBtnText = document.getElementById("classifyBtnText");
-var errorMessage = document.getElementById("errorMessage");
-var results = document.getElementById("results");
-
-try {
-    if (STORAGE_BIN_ID === "PASTE_YOUR_BIN_ID_HERE") {
-        var savedId = localStorage.getItem("judoBinId");
-        if (savedId) {
-            STORAGE_BIN_ID = savedId;
-        }
-    }
-} catch (e) {
-    console.log("localStorage not available");
-}
 
 loadModel();
 
-unlockBtn.addEventListener("click", function() {
-    if (adminPassword.value === ADMIN_PASSWORD) {
-        trainingSection.classList.remove("hidden");
-        showSuccess("Training mode unlocked!");
-    } else {
-        showError("Incorrect password");
-    }
-});
-
-imageUploadInput.addEventListener("change", function(e) {
-    var throwName = throwNameInput.value.trim();
-    if (!throwName) {
-        showError("Please enter a throw name first");
-        e.target.value = "";
-        return;
-    }
-
-    var files = Array.from(e.target.files);
-    if (files.length === 0) return;
-
-    uploadStatus.textContent = "Processing images, please wait...";
-    imageUploadInput.disabled = true;
-
-    var imageDataArray = [];
-    var processedCount = 0;
-    
-    for (var i = 0; i < files.length; i++) {
-        processImage(files[i]).then(function(imageData) {
-            imageDataArray.push(imageData);
-            processedCount++;
-            
-            if (processedCount === files.length) {
-                addThrowType(throwName, imageDataArray);
-                throwNameInput.value = "";
-                uploadStatus.textContent = files.length + " images added!";
-                setTimeout(function() {
-                    uploadStatus.textContent = "Upload multiple images at once";
-                }, 3000);
-                imageUploadInput.disabled = false;
-                e.target.value = "";
-            }
-        }).catch(function(err) {
-            showError("Error processing images: " + err.message);
-            imageUploadInput.disabled = false;
-            e.target.value = "";
-        });
-    }
-});
-
-function processImage(file) {
-    return new Promise(function(resolve, reject) {
-        var reader = new FileReader();
-        reader.onload = function(event) {
-            var img = new Image();
-            img.onload = function() {
-                var tempCanvas = document.createElement("canvas");
-                var ctx = tempCanvas.getContext("2d");
-                tempCanvas.width = 224;
-                tempCanvas.height = 224;
-                ctx.drawImage(img, 0, 0, 224, 224);
-                var imgData = ctx.getImageData(0, 0, 224, 224);
-                resolve(Array.from(imgData.data));
-            };
-            img.onerror = function() {
-                reject(new Error("Failed to load image"));
-            };
-            img.src = event.target.result;
-        };
-        reader.onerror = function() {
-            reject(new Error("Failed to read file"));
-        };
-        reader.readAsDataURL(file);
-    });
-}
-
-function addThrowType(name, images) {
-    var existingIndex = -1;
-    for (var i = 0; i < throwTypes.length; i++) {
-        if (throwTypes[i].name === name) {
-            existingIndex = i;
-            break;
-        }
-    }
-    
-    if (existingIndex !== -1) {
-        throwTypes[existingIndex].images = throwTypes[existingIndex].images.concat(images);
-    } else {
-        throwTypes.push({ name: name, images: images });
-    }
-    
-    updateThrowTypesList();
-}
-
-function updateThrowTypesList() {
-    if (throwTypes.length === 0) {
-        throwTypesList.innerHTML = "";
-        return;
-    }
-
-    var html = '<h4 class="text-sm font-semibold text-gray-700 mb-3">Added Throw Types:</h4><div class="space-y-2">';
-    
-    for (var i = 0; i < throwTypes.length; i++) {
-        html += '<div class="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">';
-        html += '<div class="flex items-center gap-3">';
-        html += '<span class="font-medium text-gray-800">' + throwTypes[i].name + '</span>';
-        html += '<span class="text-sm text-gray-500">(' + throwTypes[i].images.length + ' images)</span>';
-        html += '</div>';
-        html += '<button onclick="removeThrowType(' + i + ')" class="text-red-600 hover:text-red-800">Remove</button>';
-        html += '</div>';
-    }
-    
-    html += '</div>';
-    throwTypesList.innerHTML = html;
-}
-
-function removeThrowType(index) {
-    throwTypes.splice(index, 1);
-    updateThrowTypesList();
-}
-
-saveModelBtn.addEventListener("click", function() {
-    if (throwTypes.length === 0) {
-        showError("Please add at least one throw type before saving");
-        return;
-    }
-
-    saveModelBtn.disabled = true;
-    saveBtnText.textContent = "Uploading to cloud...";
-
-    var data = { throwTypes: throwTypes, timestamp: Date.now() };
-    
-    if (STORAGE_BIN_ID) {
-        fetch("https://api.jsonbin.io/v3/b/" + STORAGE_BIN_ID, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-        }).then(function(response) {
-            if (!response.ok) throw new Error("Failed to update cloud storage");
-            showSuccess("Training data updated in cloud!");
-        }).catch(function(err) {
-            showError("Error saving to cloud: " + err.message);
-        }).finally(function() {
-            saveModelBtn.disabled = false;
-            saveBtnText.textContent = "Save Training Data to Cloud";
-        });
-    } else {
-        fetch("https://api.jsonbin.io/v3/b", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-        }).then(function(response) {
-            if (!response.ok) throw new Error("Failed to save to cloud storage");
-            return response.json();
-        }).then(function(result) {
-            var binId = result.metadata.id;
-            localStorage.setItem("judoBinId", binId);
-            STORAGE_BIN_ID = binId;
-            showSuccess("Training data saved! Bin ID: " + binId);
-            alert("IMPORTANT: Your Bin ID is: " + binId);
-        }).catch(function(err) {
-            showError("Error saving to cloud: " + err.message);
-        }).finally(function() {
-            saveModelBtn.disabled = false;
-            saveBtnText.textContent = "Save Training Data to Cloud";
-        });
-    }
-});
-
 function loadModel() {
-    if (!STORAGE_BIN_ID) {
-        modelStatus.innerHTML = '<span class="text-gray-600">No training data available. Please contact your instructor.</span>';
-        return;
-    }
-
-    fetch("https://api.jsonbin.io/v3/b/" + STORAGE_BIN_ID + "/latest")
-        .then(function(response) {
-            if (!response.ok) {
-                throw new Error("Failed to load training data from cloud");
-            }
-            return response.json();
-        })
-        .then(function(result) {
-            throwTypes = result.record.throwTypes;
+    if (EMBEDDED_TRAINING_DATA && EMBEDDED_TRAINING_DATA !== "") {
+        try {
+            var data = JSON.parse(EMBEDDED_TRAINING_DATA);
+            throwTypes = data.throwTypes || [];
             
             for (var i = 0; i < throwTypes.length; i++) {
                 var newImages = [];
                 for (var j = 0; j < throwTypes[i].images.length; j++) {
                     var imgData = new ImageData(224, 224);
-                    imgData.data.set(throwTypes[i].images[j]);
+                    var arr = new Uint8ClampedArray(throwTypes[i].images[j]);
+                    imgData.data.set(arr);
                     newImages.push(imgData);
                 }
                 throwTypes[i].images = newImages;
             }
             
-            var totalImages = 0;
+            var total = 0;
             for (var i = 0; i < throwTypes.length; i++) {
-                totalImages += throwTypes[i].images.length;
+                total += throwTypes[i].images.length;
             }
             
-            modelStatus.innerHTML = '<span class="text-green-800">Model loaded: ' + throwTypes.length + ' throw types with ' + totalImages + ' reference images</span>';
-            modelStatus.className = 'mb-6 p-4 rounded-lg bg-green-50 border border-green-200';
-            
-            updateThrowTypesList();
-        })
-        .catch(function(err) {
-            modelStatus.innerHTML = '<span class="text-red-800">Error loading training data: ' + err.message + '</span>';
-            modelStatus.className = 'mb-6 p-4 rounded-lg bg-red-50 border border-red-200';
-        });
+            document.getElementById("statusText").textContent = "Model loaded: " + throwTypes.length + " throws, " + total + " images";
+        } catch (err) {
+            document.getElementById("statusText").textContent = "Error loading: " + err.message;
+            document.getElementById("modelStatus").className = "mb-6 p-4 rounded-lg bg-red-50 border border-red-200";
+        }
+    } else {
+        document.getElementById("statusText").textContent = "No training data. Use Training Mode to add throws.";
+        document.getElementById("modelStatus").className = "mb-6 p-4 rounded-lg bg-yellow-50 border border-yellow-200";
+    }
 }
 
-videoUploadInput.addEventListener("change", function(e) {
+document.getElementById("unlockBtn").onclick = function() {
+    if (document.getElementById("adminPassword").value === ADMIN_PASSWORD) {
+        document.getElementById("trainingSection").classList.remove("hidden");
+        showSuccess("Training mode unlocked!");
+    } else {
+        showError("Incorrect password");
+    }
+};
+
+document.getElementById("imageUpload").onchange = function(e) {
+    var name = document.getElementById("throwName").value.trim();
+    if (!name) {
+        showError("Enter throw name first");
+        return;
+    }
+    
+    var files = e.target.files;
+    if (!files.length) return;
+    
+    document.getElementById("uploadStatus").textContent = "Processing...";
+    this.disabled = true;
+    
+    var images = [];
+    var loaded = 0;
+    
+    for (var i = 0; i < files.length; i++) {
+        var reader = new FileReader();
+        reader.onload = (function() {
+            return function(event) {
+                var img = new Image();
+                img.onload = function() {
+                    var canvas = document.createElement("canvas");
+                    canvas.width = 224;
+                    canvas.height = 224;
+                    var ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, 224, 224);
+                    var data = ctx.getImageData(0, 0, 224, 224);
+                    images.push(Array.from(data.data));
+                    
+                    loaded++;
+                    if (loaded === files.length) {
+                        var existing = -1;
+                        for (var j = 0; j < throwTypes.length; j++) {
+                            if (throwTypes[j].name === name) {
+                                existing = j;
+                                break;
+                            }
+                        }
+                        
+                        if (existing >= 0) {
+                            throwTypes[existing].images = throwTypes[existing].images.concat(images);
+                        } else {
+                            throwTypes.push({name: name, images: images});
+                        }
+                        
+                        updateList();
+                        document.getElementById("throwName").value = "";
+                        document.getElementById("imageUpload").value = "";
+                        document.getElementById("imageUpload").disabled = false;
+                        document.getElementById("uploadStatus").textContent = loaded + " images added!";
+                        setTimeout(function() {
+                            document.getElementById("uploadStatus").textContent = "Upload 5-20 images per throw type";
+                        }, 2000);
+                    }
+                };
+                img.src = event.target.result;
+            };
+        })();
+        reader.readAsDataURL(files[i]);
+    }
+};
+
+function updateList() {
+    var list = document.getElementById("throwTypesList");
+    if (!throwTypes.length) {
+        list.innerHTML = "";
+        return;
+    }
+    
+    var html = "<div class='mt-4'><h4 class='font-semibold mb-2'>Training Data:</h4>";
+    for (var i = 0; i < throwTypes.length; i++) {
+        html += "<div class='flex justify-between bg-white p-2 rounded mb-2'>";
+        html += "<span>" + throwTypes[i].name + " (" + throwTypes[i].images.length + " images)</span>";
+        html += "<button onclick='removeThrow(" + i + ")' class='text-red-600'>Remove</button>";
+        html += "</div>";
+    }
+    html += "</div>";
+    list.innerHTML = html;
+}
+
+function removeThrow(idx) {
+    throwTypes.splice(idx, 1);
+    updateList();
+}
+
+document.getElementById("exportBtn").onclick = function() {
+    if (!throwTypes.length) {
+        showError("No data to export");
+        return;
+    }
+    
+    var data = JSON.stringify({throwTypes: throwTypes});
+    var win = window.open("", "Export", "width=800,height=600");
+    win.document.write("<h2>Copy this text:</h2>");
+    win.document.write("<p>Paste it into: var EMBEDDED_TRAINING_DATA = \"\";</p>");
+    win.document.write("<textarea style='width:100%;height:80%;font-size:10px;'>" + data + "</textarea>");
+};
+
+document.getElementById("videoUpload").onchange = function(e) {
     var file = e.target.files[0];
     if (!file) return;
-
-    videoFile = file;
-    var url = URL.createObjectURL(file);
-    videoPlayer.src = url;
-    videoInfo.textContent = "File: " + file.name + " (" + (file.size / 1024 / 1024).toFixed(2) + " MB)";
     
-    videoPreview.classList.remove("hidden");
-    results.classList.add("hidden");
-    errorMessage.classList.add("hidden");
-});
+    var video = document.getElementById("videoPlayer");
+    video.src = URL.createObjectURL(file);
+    document.getElementById("videoPreview").classList.remove("hidden");
+    document.getElementById("results").classList.add("hidden");
+};
 
-videoPlayer.addEventListener("loadedmetadata", function() {
-    videoWarning.classList.add("hidden");
-});
-
-videoPlayer.addEventListener("error", function() {
-    videoWarning.classList.remove("hidden");
-});
-
-classifyBtn.addEventListener("click", function() {
-    if (throwTypes.length === 0) {
-        showError("No training data available. Please contact your instructor.");
+document.getElementById("classifyBtn").onclick = function() {
+    if (!throwTypes.length) {
+        showError("No training data available");
         return;
     }
-
-    if (!videoPlayer.duration || isNaN(videoPlayer.duration) || videoPlayer.duration === 0) {
-        showError("Video format not fully supported. Please convert to H.264 MP4 format.");
-        return;
-    }
-
-    classifyBtn.disabled = true;
-    classifyBtnText.textContent = "Analyzing...";
-    errorMessage.classList.add("hidden");
-    results.classList.add("hidden");
-
+    
+    var btn = this;
+    var btnText = document.getElementById("classifyBtnText");
+    btn.disabled = true;
+    btnText.textContent = "Analyzing...";
+    
+    var video = document.getElementById("videoPlayer");
+    var canvas = document.getElementById("canvas");
     var ctx = canvas.getContext("2d");
     canvas.width = 224;
     canvas.height = 224;
-
-    var frameSimilarities = {};
-    for (var i = 0; i < throwTypes.length; i++) {
-        frameSimilarities[throwTypes[i].name] = [];
-    }
-
-    var sampleCount = 10;
-    var duration = videoPlayer.duration;
-    var currentSample = 0;
     
-    function processSample() {
-        if (currentSample >= sampleCount) {
-            console.log("Processing complete, calculating results...");
-            
-            var avgSimilarities = {};
-            for (var name in frameSimilarities) {
-                var sum = 0;
-                for (var i = 0; i < frameSimilarities[name].length; i++) {
-                    sum += frameSimilarities[name][i];
-                }
-                avgSimilarities[name] = sum / frameSimilarities[name].length;
-            }
-
-            var sortedResults = [];
-            for (var name in avgSimilarities) {
-                sortedResults.push({ name: name, similarity: avgSimilarities[name] });
-            }
-            sortedResults.sort(function(a, b) {
-                return b.similarity - a.similarity;
-            });
-
-            var topResult = sortedResults[0];
-            var threshold = 0.6;
-
-            displayResults(topResult, sortedResults, threshold);
-            
-            classifyBtn.disabled = false;
-            classifyBtnText.textContent = "Classify Throw";
+    var frames = [];
+    var samples = 10;
+    var current = 0;
+    
+    function capture() {
+        if (current >= samples) {
+            classify(frames);
             return;
         }
         
-        console.log("Processing sample " + (currentSample + 1) + " of " + sampleCount);
-        
-        var time = (duration / sampleCount) * currentSample;
-        videoPlayer.currentTime = time;
-        
-        var seekTimeout = setTimeout(function() {
-            console.error("Seek timeout for sample " + currentSample);
-            showError("Video seeking timed out. Try a different video format.");
-            classifyBtn.disabled = false;
-            classifyBtnText.textContent = "Classify Throw";
-        }, 3000);
-        
-        videoPlayer.onseeked = function() {
-            clearTimeout(seekTimeout);
-            
-            try {
-                ctx.drawImage(videoPlayer, 0, 0, 224, 224);
-                var frameData = ctx.getImageData(0, 0, 224, 224);
-
-                for (var j = 0; j < throwTypes.length; j++) {
-                    var bestSimilarity = 0;
-                    for (var k = 0; k < throwTypes[j].images.length; k++) {
-                        var similarity = compareImages(frameData, throwTypes[j].images[k]);
-                        bestSimilarity = Math.max(bestSimilarity, similarity);
-                    }
-                    frameSimilarities[throwTypes[j].name].push(bestSimilarity);
-                }
-                
-                currentSample++;
-                setTimeout(processSample, 100);
-            } catch (err) {
-                console.error("Error processing frame:", err);
-                showError("Error processing video frame: " + err.message);
-                classifyBtn.disabled = false;
-                classifyBtnText.textContent = "Classify Throw";
-            }
+        video.currentTime = (video.duration / samples) * current;
+        video.onseeked = function() {
+            ctx.drawImage(video, 0, 0, 224, 224);
+            frames.push(ctx.getImageData(0, 0, 224, 224));
+            current++;
+            setTimeout(capture, 50);
         };
     }
     
-    processSample();
-});
+    function classify(frames) {
+        var scores = {};
+        
+        for (var i = 0; i < throwTypes.length; i++) {
+            scores[throwTypes[i].name] = [];
+        }
+        
+        for (var i = 0; i < frames.length; i++) {
+            for (var j = 0; j < throwTypes.length; j++) {
+                var best = 0;
+                for (var k = 0; k < throwTypes[j].images.length; k++) {
+                    var sim = compare(frames[i], throwTypes[j].images[k]);
+                    if (sim > best) best = sim;
+                }
+                scores[throwTypes[j].name].push(best);
+            }
+        }
+        
+        var results = [];
+        for (var name in scores) {
+            var avg = 0;
+            for (var i = 0; i < scores[name].length; i++) {
+                avg += scores[name][i];
+            }
+            avg /= scores[name].length;
+            results.push({name: name, score: avg});
+        }
+        
+        results.sort(function(a, b) { return b.score - a.score; });
+        
+        showResults(results);
+        btn.disabled = false;
+        btnText.textContent = "Classify Throw";
+    }
+    
+    capture();
+};
 
-function compareImages(img1, img2) {
+function compare(img1, img2) {
+    var d1 = img1.data;
+    var d2 = img2.data;
     var diff = 0;
-    var data1 = img1.data;
-    var data2 = img2.data;
     
-    for (var i = 0; i < data1.length; i += 4) {
-        var rDiff = data1[i] - data2[i];
-        var gDiff = data1[i + 1] - data2[i + 1];
-        var bDiff = data1[i + 2] - data2[i + 2];
-        diff += Math.sqrt(rDiff * rDiff + gDiff * gDiff + bDiff * bDiff);
+    for (var i = 0; i < d1.length; i += 4) {
+        var dr = d1[i] - d2[i];
+        var dg = d1[i+1] - d2[i+1];
+        var db = d1[i+2] - d2[i+2];
+        diff += Math.sqrt(dr*dr + dg*dg + db*db);
     }
     
-    var maxDiff = Math.sqrt(255 * 255 * 3) * data1.length / 4;
-    return 1 - (diff / maxDiff);
+    var max = Math.sqrt(255*255*3) * (d1.length/4);
+    return 1 - (diff/max);
 }
 
-function displayResults(topResult, allResults, threshold) {
-    var resultThrow = document.getElementById("resultThrow");
-    var resultConfidence = document.getElementById("resultConfidence");
-    var allPredictions = document.getElementById("allPredictions");
-
-    var isUnidentifiable = topResult.similarity < threshold;
-    var displayName = isUnidentifiable ? "Unidentifiable" : topResult.name;
+function showResults(results) {
+    var best = results[0];
+    var threshold = 0.5;
     
-    resultThrow.textContent = displayName;
-    resultThrow.className = "text-3xl font-bold " + (isUnidentifiable ? "text-orange-600" : "text-indigo-600");
-    resultConfidence.textContent = "Confidence: " + (topResult.similarity * 100).toFixed(1) + "%";
-
+    document.getElementById("resultThrow").textContent = best.score < threshold ? "Unidentifiable" : best.name;
+    document.getElementById("resultThrow").className = "text-3xl font-bold " + (best.score < threshold ? "text-orange-600" : "text-indigo-600");
+    document.getElementById("resultConfidence").textContent = "Confidence: " + (best.score * 100).toFixed(1) + "%";
+    
     var html = "";
-    for (var i = 0; i < allResults.length; i++) {
-        html += '<div class="mb-3">';
-        html += '<div class="flex justify-between mb-1">';
-        html += '<span class="text-sm text-gray-700">' + allResults[i].name + '</span>';
-        html += '<span class="text-sm text-gray-600">' + (allResults[i].similarity * 100).toFixed(1) + '%</span>';
-        html += '</div>';
-        html += '<div class="w-full bg-gray-200 rounded-full h-2">';
-        html += '<div class="bg-indigo-600 h-2 rounded-full" style="width: ' + (allResults[i].similarity * 100) + '%"></div>';
-        html += '</div>';
-        html += '</div>';
+    for (var i = 0; i < results.length; i++) {
+        html += "<div class='mb-2'>";
+        html += "<div class='flex justify-between mb-1'>";
+        html += "<span>" + results[i].name + "</span>";
+        html += "<span>" + (results[i].score * 100).toFixed(1) + "%</span>";
+        html += "</div>";
+        html += "<div class='w-full bg-gray-200 rounded-full h-2'>";
+        html += "<div class='bg-indigo-600 h-2 rounded-full' style='width:" + (results[i].score * 100) + "%'></div>";
+        html += "</div></div>";
     }
-    allPredictions.innerHTML = html;
-
-    results.classList.remove("hidden");
+    document.getElementById("allPredictions").innerHTML = html;
+    document.getElementById("results").classList.remove("hidden");
 }
 
-function showError(message) {
-    errorMessage.querySelector("span").textContent = message;
-    errorMessage.classList.remove("hidden");
+function showError(msg) {
+    document.getElementById("errorMessage").querySelector("span").textContent = msg;
+    document.getElementById("errorMessage").classList.remove("hidden");
 }
 
-function showSuccess(message) {
-    modelStatus.innerHTML = '<span class="text-green-800">' + message + '</span>';
-    modelStatus.className = "mb-6 p-4 rounded-lg bg-green-50 border border-green-200";
+function showSuccess(msg) {
+    document.getElementById("statusText").textContent = msg;
+    document.getElementById("modelStatus").className = "mb-6 p-4 rounded-lg bg-green-50 border border-green-200";
 }
 </script>
 </body>
