@@ -278,31 +278,33 @@ document.getElementById("exportBtn").onclick = function() {
         return;
     }
     
-    var data = JSON.stringify({throwTypes: throwTypes});
+    showSuccess("Preparing export... this may take a moment");
     
-    var exportDiv = document.createElement("div");
-    exportDiv.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50";
-    exportDiv.innerHTML = "<div class='bg-white rounded-lg p-6 max-w-4xl w-full max-h-screen overflow-auto'>" +
-        "<h2 class='text-2xl font-bold mb-4'>Export Training Data</h2>" +
-        "<p class='mb-2'>1. Click 'Select All' below</p>" +
-        "<p class='mb-2'>2. Copy the selected text (Ctrl+C or Cmd+C)</p>" +
-        "<p class='mb-2'>3. In GitHub, find the line: var EMBEDDED_TRAINING_DATA = \"\";</p>" +
-        "<p class='mb-4'>4. Paste the text between the quotes</p>" +
-        "<button onclick='selectExportText()' class='mb-2 px-4 py-2 bg-blue-600 text-white rounded'>Select All</button>" +
-        "<button onclick='closeExport()' class='mb-2 ml-2 px-4 py-2 bg-gray-600 text-white rounded'>Close</button>" +
-        "<textarea id='exportText' readonly style='width:100%;height:400px;font-family:monospace;font-size:10px;border:1px solid #ccc;padding:8px;'>" + 
-        data.replace(/</g, "&lt;").replace(/>/g, "&gt;") + 
-        "</textarea></div>";
-    
-    document.body.appendChild(exportDiv);
-    
-    window.selectExportText = function() {
-        document.getElementById("exportText").select();
-    };
-    
-    window.closeExport = function() {
-        document.body.removeChild(exportDiv);
-    };
+    setTimeout(function() {
+        try {
+            var compressed = [];
+            for (var i = 0; i < throwTypes.length; i++) {
+                var imgs = [];
+                for (var j = 0; j < Math.min(throwTypes[i].images.length, 10); j++) {
+                    imgs.push(throwTypes[i].images[j]);
+                }
+                compressed.push({name: throwTypes[i].name, images: imgs});
+            }
+            
+            var data = JSON.stringify({throwTypes: compressed});
+            
+            var blob = new Blob([data], {type: 'text/plain'});
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'judo-training-data.txt';
+            a.click();
+            
+            showSuccess("Downloaded! Open the file, copy all text, and paste into code.");
+        } catch(err) {
+            showError("Export failed: " + err.message);
+        }
+    }, 100);
 };
 
 document.getElementById("videoUpload").onchange = function(e) {
