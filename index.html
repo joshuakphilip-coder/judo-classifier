@@ -1,314 +1,345 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Judo Throw Classifier</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1640029074/drawing_utils.js" crossorigin="anonymous"></script>
-</head>
-<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-    <div class="max-w-4xl mx-auto">
-        <div class="bg-white rounded-lg shadow-xl p-6">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center">🥋 Judo Throw Classifier</h1>
-            <p class="text-gray-600 text-center mb-6">AI-Powered Body Pose Analysis</p>
+Judo Throw Classifier
+</h1>
+<p class="text-gray-600 text-center mb-8">
+                    Upload reference images for each throw, then classify videos
+                    Upload a video to identify the judo throw
+</p>
 
-            <div class="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-center">
-                <span class="text-green-800 font-medium">✅ Ready: O-Goshi • Osoto-Gari • Morote-Gari</span>
-            </div>
-
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Upload Video</label>
-                <input type="file" id="videoUpload" accept="video/*" 
-                       class="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-400 cursor-pointer">
-            </div>
-
-            <div id="videoSection" class="hidden mb-6">
-                <video id="videoPlayer" class="w-full max-h-96 rounded-lg bg-black mb-3"></video>
-                <button id="analyzeBtn" 
-                        class="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold">
-                    🔍 Analyze Throw
-                </button>
-            </div>
-
-            <div id="progress" class="hidden mb-6">
-                <div class="bg-gray-200 rounded-full h-3 mb-2">
-                    <div id="progressBar" class="bg-indigo-600 h-3 rounded-full transition-all" style="width:0%"></div>
-                </div>
-                <p id="progressText" class="text-sm text-gray-600 text-center"></p>
-            </div>
-
-            <div id="error" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <span class="text-red-800"></span>
-            </div>
-
-            <div id="results" class="hidden">
-                <div class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">Results</h3>
+                <!-- Add Throw Types -->
+                <div class="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Step 1: Add Throw Types</h3>
                     
-                    <div class="bg-white rounded-lg p-6 mb-4 shadow text-center">
-                        <p class="text-gray-600 mb-2">Identified Technique:</p>
-                        <p id="resultName" class="text-4xl font-bold text-indigo-600 mb-2"></p>
-                        <p id="resultDesc" class="text-gray-500 mb-3"></p>
-                        <div class="flex items-center justify-center gap-3">
-                            <div class="w-64 bg-gray-200 rounded-full h-4">
-                                <div id="confidenceBar" class="bg-indigo-600 h-4 rounded-full" style="width:0%"></div>
-                            </div>
-                            <span id="confidence" class="font-semibold"></span>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Throw Name (e.g., "O-Goshi", "Seoi-Nage", "Uchi-Mata")
+                <!-- Admin Mode Toggle -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Training Mode</p>
+                            <p class="text-xs text-gray-500">For administrators only</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="adminToggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+</label>
+                        <input
+                            type="text"
+                            id="throwName"
+                            placeholder="Enter throw name"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+</div>
+                </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Upload Reference Images (Select as many as you want)
+                        </label>
+                        <input
+                            type="file"
+                            id="imageUpload"
+                            accept="image/*"
+                            multiple
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        <p class="text-xs text-gray-500 mt-1" id="uploadStatus">
+                            You can select and upload many images at once
+                        </p>
+                    </div>
+                <!-- Training Section (Hidden by default) -->
+                <div id="trainingSection" class="mb-8 hidden">
+                    <div class="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">🔧 Train the Model</h3>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Throw Name (e.g., "O-Goshi", "Seoi-Nage", "Uchi-Mata")
+                            </label>
+                            <input
+                                type="text"
+                                id="throwName"
+                                placeholder="Enter throw name"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+
+                    <div id="throwTypesList" class="mt-6"></div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Upload Reference Images (Select as many as you want)
+                            </label>
+                            <input
+                                type="file"
+                                id="imageUpload"
+                                accept="image/*"
+                                multiple
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                            <p class="text-xs text-gray-500 mt-1" id="uploadStatus">
+                                Upload multiple images at once
+                            </p>
+                        </div>
+
+                        <div id="throwTypesList" class="mt-6"></div>
+
+                        <div class="mt-6 pt-4 border-t border-blue-200">
+                            <button
+                                id="saveModelBtn"
+                                class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                            >
+                                💾 Save Training Data
+                            </button>
+                            <p class="text-xs text-gray-600 mt-2 text-center">
+                                This will save your training so all users can classify videos
+                            </p>
                         </div>
                     </div>
+</div>
 
-                    <div class="bg-white rounded-lg p-4 shadow mb-4">
-                        <p class="text-sm font-medium text-gray-700 mb-3">All Predictions:</p>
-                        <div id="allPredictions"></div>
+                <!-- Video Upload -->
+                <div id="videoUploadSection" class="mb-8 hidden">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Step 2: Upload Video to Classify</h3>
+                <!-- Model Status -->
+                <div id="modelStatus" class="mb-6 p-4 rounded-lg hidden"></div>
+
+                <!-- Video Upload Section -->
+                <div id="videoUploadSection" class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Upload Video to Classify</h3>
+<div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors">
+<input
+type="file"
+@@ -98,14 +129,8 @@ <h3 class="text-lg font-semibold text-gray-700 mb-4">Video Preview</h3>
+
+<div id="videoWarning" class="mt-4 hidden p-3 bg-yellow-50 border border-yellow-200 rounded">
+<p class="text-sm text-yellow-800">
+                            ⚠️ Video preview not available. Your MP4 codec isn't supported by the browser. 
+                            To fix this, convert your video to H.264 format using:
+                            ⚠️ Video preview not available. Convert to H.264 format for better compatibility.
+</p>
+                        <ul class="text-xs text-yellow-700 mt-2 ml-4 list-disc">
+                            <li>HandBrake (free desktop app)</li>
+                            <li>CloudConvert.com (online converter)</li>
+                            <li>VLC Media Player (File → Convert/Save)</li>
+                        </ul>
+</div>
+</div>
+
+@@ -136,31 +161,26 @@ <h3 class="text-xl font-semibold text-gray-800 mb-4">Results</h3>
+<div class="mt-8 p-4 bg-blue-50 rounded-lg">
+<h4 class="font-semibold text-gray-800 mb-2">How to Use:</h4>
+<ol class="list-decimal list-inside text-sm text-gray-700 space-y-2">
+                        <li>Enter a throw name (like "O-Goshi" or "Seoi-Nage")</li>
+                        <li>Click "Choose Files" and select as many reference images as you want</li>
+                        <li>Repeat for all throw types you want to identify</li>
+                        <li>You can add more images to an existing throw type by typing the same name</li>
+                        <li>Upload a video showing a judo throw</li>
+                        <li>Click "Classify Throw" to see the results</li>
+                        <li><strong>For Students:</strong> Just upload a video and click "Classify Throw"</li>
+                        <li><strong>For Trainers:</strong> Toggle "Training Mode", add reference images for each throw, and click "Save Training Data"</li>
+</ol>
+                    <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                        <p class="text-xs text-yellow-800">
+                            <strong>Tip:</strong> More images = better accuracy! The files you add will stay saved until you remove them.
+                        </p>
                     </div>
-
-                    <div class="bg-white rounded-lg p-4 shadow">
-                        <p class="text-sm font-bold text-gray-800 mb-3">📚 Key Points:</p>
-                        <ul id="keyPoints" class="space-y-1 text-sm text-gray-700"></ul>
-                    </div>
-                </div>
-            </div>
-
-            <canvas id="canvas" class="hidden"></canvas>
-        </div>
-    </div>
+</div>
+</div>
+</div>
+</div>
 
 <script>
-const THROWS = {
-    ogoshi: {
-        name: "O-Goshi",
-        english: "Major Hip Throw",
-        category: "Hip Technique",
-        points: [
-            "Turn back to opponent",
-            "Hip deep under opponent's center",
-            "Bend forward 45-60 degrees",
-            "Arm around waist tightly",
-            "Feet parallel and close",
-            "Lift while rotating forward"
-        ]
-    },
-    osoto: {
-        name: "Osoto-Gari", 
-        english: "Major Outer Reap",
-        category: "Leg Technique",
-        points: [
-            "Stay upright facing opponent",
-            "Strong collar and sleeve grips",
-            "Break balance backward",
-            "Sweep leg high behind opponent's leg",
-            "Drive chest forward",
-            "Follow through backward"
-        ]
-    },
-    morote: {
-        name: "Morote-Gari",
-        english: "Double Leg Takedown", 
-        category: "Hand Technique",
-        points: [
-            "Drop hips low (level change)",
-            "Deep penetration step",
-            "Wrap both arms around legs",
-            "Head to side of body",
-            "Drive forward with legs",
-            "Maintain control of both legs"
-        ]
-    }
+        const throwTypes = [];
+        let throwTypes = [];
+let videoFile = null;
+
+        const adminToggle = document.getElementById('adminToggle');
+        const trainingSection = document.getElementById('trainingSection');
+const throwNameInput = document.getElementById('throwName');
+const imageUploadInput = document.getElementById('imageUpload');
+const uploadStatus = document.getElementById('uploadStatus');
+const throwTypesList = document.getElementById('throwTypesList');
+        const saveModelBtn = document.getElementById('saveModelBtn');
+        const modelStatus = document.getElementById('modelStatus');
+const videoUploadSection = document.getElementById('videoUploadSection');
+const videoUploadInput = document.getElementById('videoUpload');
+const videoPreview = document.getElementById('videoPreview');
+@@ -173,6 +193,18 @@ <h4 class="font-semibold text-gray-800 mb-2">How to Use:</h4>
+const errorMessage = document.getElementById('errorMessage');
+const results = document.getElementById('results');
+
+        // Load saved model on startup
+        loadModel();
+
+        // Toggle admin mode
+        adminToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                trainingSection.classList.remove('hidden');
+            } else {
+                trainingSection.classList.add('hidden');
+            }
+        });
+
+// Handle image upload
+imageUploadInput.addEventListener('change', async (e) => {
+const throwName = throwNameInput.value.trim();
+@@ -198,9 +230,9 @@ <h4 class="font-semibold text-gray-800 mb-2">How to Use:</h4>
+
+addThrowType(throwName, imageDataArray);
+throwNameInput.value = '';
+                uploadStatus.textContent = `✓ ${files.length} images added successfully!`;
+                uploadStatus.textContent = `✓ ${files.length} images added!`;
+setTimeout(() => {
+                    uploadStatus.textContent = 'You can select and upload many images at once';
+                    uploadStatus.textContent = 'Upload multiple images at once';
+}, 3000);
+} catch (err) {
+showError(`Error processing images: ${err.message}`);
+@@ -222,7 +254,7 @@ <h4 class="font-semibold text-gray-800 mb-2">How to Use:</h4>
+tempCanvas.height = 224;
+ctx.drawImage(img, 0, 0, 224, 224);
+const imgData = ctx.getImageData(0, 0, 224, 224);
+                        resolve(imgData);
+                        resolve(Array.from(imgData.data));
 };
-
-let pose = null;
-let video = null;
-
-function initPose() {
-    pose = new Pose({
-        locateFile: (file) => "https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/" + file
-    });
-    
-    pose.setOptions({
-        modelComplexity: 1,
-        smoothLandmarks: true,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
-    });
+img.onerror = () => reject(new Error('Failed to load image'));
+img.src = event.target.result;
+@@ -242,7 +274,6 @@ <h4 class="font-semibold text-gray-800 mb-2">How to Use:</h4>
 }
 
-function analyzeFrame(landmarks) {
-    const scores = {ogoshi: 0, osoto: 0, morote: 0};
-    
-    const nose = landmarks[0];
-    const lShoulder = landmarks[11];
-    const rShoulder = landmarks[12];
-    const lHip = landmarks[23];
-    const rHip = landmarks[24];
-    const lKnee = landmarks[25];
-    const rKnee = landmarks[26];
-    const lAnkle = landmarks[27];
-    const rAnkle = landmarks[28];
-    
-    const hipY = (lHip.y + rHip.y) / 2;
-    const shoulderY = (lShoulder.y + rShoulder.y) / 2;
-    const noseY = nose.y;
-    
-    // O-Goshi detection
-    if (noseY < shoulderY - 0.05) scores.ogoshi += 3;
-    if (Math.abs(lShoulder.x - rShoulder.x) > 0.12) scores.ogoshi += 2;
-    if (hipY < 0.55) scores.ogoshi += 2;
-    if (Math.abs(lHip.y - rHip.y) > 0.08) scores.ogoshi += 2;
-    
-    // Osoto detection
-    if (noseY > shoulderY + 0.03) scores.osoto += 3;
-    if (Math.abs(lShoulder.x - rShoulder.x) < 0.10) scores.osoto += 2;
-    const legExtended = Math.abs(lAnkle.y - lKnee.y) > 0.15 || Math.abs(rAnkle.y - rKnee.y) > 0.15;
-    if (legExtended) scores.osoto += 3;
-    if (shoulderY < 0.35) scores.osoto += 1;
-    
-    // Morote-Gari detection
-    if (hipY > 0.65) scores.morote += 4;
-    if (shoulderY > hipY - 0.1) scores.morote += 3;
-    const stanceWide = Math.abs(lAnkle.x - rAnkle.x) > 0.25;
-    if (stanceWide) scores.morote += 2;
-    const kneeLow = Math.min(lKnee.y, rKnee.y) > 0.70;
-    if (kneeLow) scores.morote += 2;
-    
-    return scores;
+updateThrowTypesList();
+            videoUploadSection.classList.remove('hidden');
 }
 
-document.getElementById('videoUpload').onchange = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    video = document.getElementById('videoPlayer');
-    video.src = URL.createObjectURL(file);
-    video.load();
-    
-    document.getElementById('videoSection').classList.remove('hidden');
-    document.getElementById('results').classList.add('hidden');
-    
-    if (!pose) initPose();
-};
-
-document.getElementById('analyzeBtn').onclick = async function() {
-    const btn = this;
-    btn.disabled = true;
-    
-    document.getElementById('progress').classList.remove('hidden');
-    document.getElementById('results').classList.add('hidden');
-    updateProgress(0, 'Starting analysis...');
-    
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    
-    const allScores = {ogoshi: [], osoto: [], morote: []};
-    const sampleCount = 10;
-    let processed = 0;
-    
-    try {
-        for (let i = 0; i < sampleCount; i++) {
-            video.currentTime = (video.duration / sampleCount) * i;
-            
-            await new Promise(resolve => {
-                video.onseeked = resolve;
-                setTimeout(resolve, 1000);
-            });
-            
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            await new Promise((resolve) => {
-                pose.onResults((results) => {
-                    if (results.poseLandmarks) {
-                        const scores = analyzeFrame(results.poseLandmarks);
-                        allScores.ogoshi.push(scores.ogoshi);
-                        allScores.osoto.push(scores.osoto);
-                        allScores.morote.push(scores.morote);
-                    }
-                    resolve();
-                });
-                pose.send({image: canvas});
-            });
-            
-            processed++;
-            updateProgress((processed / sampleCount) * 100, 
-                `Analyzing frame ${processed}/${sampleCount}...`);
+function updateThrowTypesList() {
+@@ -262,7 +293,7 @@ <h4 class="text-sm font-semibold text-gray-700 mb-3">Added Throw Types:</h4>
+                               </svg>
+                               <div>
+                                   <span class="font-medium text-gray-800">${throwType.name}</span>
+                                    <span class="text-sm text-gray-500 ml-2">(${throwType.images.length} reference images)</span>
+                                    <span class="text-sm text-gray-500 ml-2">(${throwType.images.length} images)</span>
+                               </div>
+                           </div>
+                           <button onclick="removeThrowType(${index})" class="text-red-600 hover:text-red-800 transition-colors">
+@@ -279,21 +310,75 @@ <h4 class="text-sm font-semibold text-gray-700 mb-3">Added Throw Types:</h4>
+function removeThrowType(index) {
+throwTypes.splice(index, 1);
+updateThrowTypesList();
         }
-        
-        const avg = {
-            ogoshi: allScores.ogoshi.reduce((a,b) => a+b, 0) / allScores.ogoshi.length,
-            osoto: allScores.osoto.reduce((a,b) => a+b, 0) / allScores.osoto.length,
-            morote: allScores.morote.reduce((a,b) => a+b, 0) / allScores.morote.length
-        };
-        
-        const total = avg.ogoshi + avg.osoto + avg.morote;
-        const results = [
-            {id: 'ogoshi', score: (avg.ogoshi / total) * 100},
-            {id: 'osoto', score: (avg.osoto / total) * 100},
-            {id: 'morote', score: (avg.morote / total) * 100}
-        ].sort((a, b) => b.score - a.score);
-        
-        showResults(results);
-        
-    } catch (err) {
-        showError('Analysis failed: ' + err.message);
-    } finally {
-        btn.disabled = false;
-        setTimeout(() => {
-            document.getElementById('progress').classList.add('hidden');
-        }, 1000);
-    }
+
+        // Save model
+        saveModelBtn.addEventListener('click', () => {
+if (throwTypes.length === 0) {
+                videoUploadSection.classList.add('hidden');
+                showError('Please add at least one throw type before saving');
+                return;
+            }
+
+            try {
+                localStorage.setItem('judoModel', JSON.stringify(throwTypes));
+                showModelStatus('✓ Training data saved! All users can now classify videos.', 'success');
+                
+                // Auto-close training mode after save
+                setTimeout(() => {
+                    adminToggle.checked = false;
+                    trainingSection.classList.add('hidden');
+                }, 2000);
+            } catch (err) {
+                showError('Error saving model: ' + err.message);
+            }
+        });
+
+        // Load model
+        function loadModel() {
+            try {
+                const saved = localStorage.getItem('judoModel');
+                if (saved) {
+                    throwTypes = JSON.parse(saved);
+                    
+                    // Convert arrays back to ImageData
+                    throwTypes = throwTypes.map(throwType => ({
+                        ...throwType,
+                        images: throwType.images.map(imgArray => {
+                            const imgData = new ImageData(224, 224);
+                            imgData.data.set(imgArray);
+                            return imgData;
+                        })
+                    }));
+                    
+                    const totalImages = throwTypes.reduce((sum, t) => sum + t.images.length, 0);
+                    showModelStatus(
+                        `✓ Model loaded: ${throwTypes.length} throw types with ${totalImages} reference images`, 
+                        'success'
+                    );
+                    updateThrowTypesList();
+                } else {
+                    showModelStatus('⚠️ No training data found. Enable Training Mode to train the model.', 'warning');
+                }
+            } catch (err) {
+                showError('Error loading model: ' + err.message);
+}
+}
+
+        function showModelStatus(message, type) {
+            modelStatus.textContent = message;
+            modelStatus.className = `mb-6 p-4 rounded-lg ${
+                type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' :
+                type === 'warning' ? 'bg-yellow-50 border border-yellow-200 text-yellow-800' :
+                'bg-gray-50 border border-gray-200 text-gray-800'
+            }`;
+            modelStatus.classList.remove('hidden');
+        }
+
+// Handle video upload
+videoUploadInput.addEventListener('change', (e) => {
+const file = e.target.files[0];
+if (!file) return;
+
+            console.log('=== VIDEO UPLOAD DEBUG ===');
+            console.log('File name:', file.name);
+            console.log('File type:', file.type);
+            console.log('File size:', file.size, 'bytes', '(' + (file.size / 1024 / 1024).toFixed(2) + ' MB)');
+
+videoFile = file;
+const url = URL.createObjectURL(file);
+videoPlayer.src = url;
+@@ -305,25 +390,22 @@ <h4 class="text-sm font-semibold text-gray-700 mb-3">Added Throw Types:</h4>
+});
+
+videoPlayer.addEventListener('loadedmetadata', () => {
+            console.log('✓ Video loaded successfully!');
+            console.log('Duration:', videoPlayer.duration, 'seconds');
+videoWarning.classList.add('hidden');
+});
+
+        videoPlayer.addEventListener('error', (e) => {
+            console.error('✗ Video playback error');
+        videoPlayer.addEventListener('error', () => {
+videoWarning.classList.remove('hidden');
+});
+
+// Classify video
+classifyBtn.addEventListener('click', async () => {
+if (throwTypes.length === 0) {
+                showError('Please add at least one throw type with reference images first.');
+                showError('No training data available. Please contact your instructor.');
+return;
+}
+
+if (!videoPlayer.duration || isNaN(videoPlayer.duration) || videoPlayer.duration === 0) {
+                showError('Video format not fully supported by browser. Please convert your video to a web-compatible MP4 format (H.264 codec).');
+                showError('Video format not fully supported. Please convert to H.264 MP4 format.');
+return;
+}
+
+@@ -355,10 +437,6 @@ <h4 class="text-sm font-semibold text-gray-700 mb-3">Added Throw Types:</h4>
+clearTimeout(timeout);
+resolve();
 };
+                        videoPlayer.onerror = () => {
+                            clearTimeout(timeout);
+                            reject(new Error('Video seek error'));
+                        };
+});
 
-function updateProgress(pct, txt) {
-    document.getElementById('progressBar').style.width = pct + '%';
-    document.getElementById('progressText').textContent = txt;
-}
-
-function showResults(results) {
-    const best = results[0];
-    const throwData = THROWS[best.id];
-    
-    document.getElementById('resultName').textContent = throwData.name;
-    document.getElementById('resultDesc').textContent = throwData.english + ' • ' + throwData.category;
-    document.getElementById('confidence').textContent = best.score.toFixed(1) + '%';
-    document.getElementById('confidenceBar').style.width = best.score + '%';
-    
-    let html = '';
-    results.forEach(r => {
-        const t = THROWS[r.id];
-        html += `
-            <div class="mb-2">
-                <div class="flex justify-between mb-1">
-                    <span class="font-medium">${t.name}</span>
-                    <span class="text-sm">${r.score.toFixed(1)}%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-indigo-500 h-2 rounded-full" style="width:${r.score}%"></div>
-                </div>
-            </div>
-        `;
-    });
-    document.getElementById('allPredictions').innerHTML = html;
-    
-    let points = '';
-    throwData.points.forEach(p => {
-        points += `<li>✓ ${p}</li>`;
-    });
-    document.getElementById('keyPoints').innerHTML = points;
-    
-    document.getElementById('results').classList.remove('hidden');
-}
-
-function showError(msg) {
-    const el = document.getElementById('error');
-    el.querySelector('span').textContent = msg;
-    el.classList.remove('hidden');
-}
-
-console.log('Judo Classifier Ready');
-</script>
-</body>
-</html>
+ctx.drawImage(videoPlayer, 0, 0, 224, 224);
